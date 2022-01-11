@@ -9,9 +9,12 @@ module Floop
 
   class Config
     attr_reader :error_handlers
+    attr_accessor :wrap_falsey_result, :wrap_truthy_result
 
     def initialize
       @error_handlers = []
+      @wrap_falsey_result = false
+      @wrap_truthy_result = false
     end
   end
 end

@@ -3,6 +3,7 @@
 require "bundler/setup"
 require "floop"
 require "pry"
+require "support/config_helpers"
 require "support/hooks/active_model"
 
 RSpec.configure do |config|
@@ -14,5 +15,6 @@ RSpec.configure do |config|
     mocks.verify_partial_doubles = true
   end
 
+  config.include ConfigHelpers
   config.include Hooks::ActiveModel
 end

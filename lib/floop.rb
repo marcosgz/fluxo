@@ -2,6 +2,7 @@
 
 require_relative "floop/version"
 require_relative "floop/config"
+require_relative "floop/errors"
 require_relative "floop/operation"
 require_relative "floop/result"
 
