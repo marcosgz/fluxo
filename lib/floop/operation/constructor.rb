@@ -8,6 +8,10 @@ module Floop
       end
 
       module ClassMethods
+        def inherited(subclass)
+          subclass.instance_variable_set(:@attribute_names, @attribute_names.dup)
+        end
+
         def def_Operation(op_module)
           tap do |klass|
             op_module.define_singleton_method(:Operation) do |*attrs|
