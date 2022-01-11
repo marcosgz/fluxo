@@ -8,6 +8,12 @@ module Floop
       end
 
       module ClassMethods
+        attr_reader :validations_proxy
+
+        def validations
+          raise NotImplementedError, "ActiveModel is not defined to use validations."
+        end
+
         def attribute_names
           @attribute_names ||= []
         end

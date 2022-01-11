@@ -3,7 +3,9 @@ module Hooks
     def self.included(base)
       base.around(:example) do |example|
         if example.metadata[:active_model] && !defined?(::ActiveModel)
-          example.metadata[:skip] = "ActiveModel not defined"
+          example.metadata[:skip] = "ActiveModel not defined. Skipping."
+        elsif !example.metadata[:active_model] && defined?(::ActiveModel)
+          example.metadata[:skip] = "ActiveModel defined. Skipping."
         else
           example.run
         end

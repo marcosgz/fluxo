@@ -4,4 +4,7 @@ module Floop
 
   class InvalidResultError < Error
   end
+
+  class InvalidValidationsError < Error
+  end
 end

@@ -12,7 +12,7 @@ module Floop
 
     class << self
       def flow(*methods)
-        define_method(:call!) { __execute_flow__(steps: methods) }
+        define_method(:call!) { |**| __execute_flow__(steps: methods) }
       end
 
       def call(**attrs)
@@ -20,7 +20,7 @@ module Floop
 
         begin
           instance.__execute_flow__(steps: [:call!])
-        rescue InvalidResultError => e
+        rescue InvalidResultError, InvalidValidationsError => e
           raise e
         rescue => e
           Floop::Result.new(type: :exception, value: e, operation: instance, ids: %i[error]).tap do |result|
@@ -38,7 +38,7 @@ module Floop
       end
     end
 
-    def call!
+    def call!(**)
       raise NotImplementedError, <<~ERROR
         You must implement the #call! method in your operation.
         For complexes operations, you can use the #flow method instead.
@@ -49,7 +49,7 @@ module Floop
     # If one of the methods is a failure stop the execution and return a result.
     def __execute_flow__(steps: [])
       result = nil
-
+      steps.unshift(:__validate__) if self.class.validations_proxy
       steps.each do |step|
         result = __wrap_result__(send(step))
         break unless result.success?
@@ -86,6 +86,10 @@ module Floop
     end
 
     private
+
+    def __validate__(**)
+      self.class.validations_proxy.validate!(self)
+    end
 
     def __wrap_result__(result)
       if result.is_a?(Floop::Result)
