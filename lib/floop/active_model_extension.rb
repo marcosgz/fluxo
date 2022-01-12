@@ -9,7 +9,7 @@ module Floop
         begin
           @validations_proxy.class_eval(&block)
         rescue => e
-          raise InvalidValidationsError, <<~ERROR
+          raise ValidationDefinitionError, <<~ERROR
             Invalid validations for #{self.class.name}.
 
             #{e.message}
@@ -23,11 +23,11 @@ module Floop
         validator = Class.new do
           include ActiveModel::Validations
 
-          def self.validate!(operation_instance)
+          def self.validate!(operation_instance, **attrs)
             validator = new
 
-            operation_instance.class.attribute_names.each do |attribute_name|
-              validator.public_send(:"#{attribute_name}=", operation_instance.public_send(attribute_name))
+            attrs.each do |name, value|
+              validator.public_send(:"#{name}=", value)
             end
 
             if validator.valid?

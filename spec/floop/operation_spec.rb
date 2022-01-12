@@ -16,14 +16,14 @@ RSpec.describe Floop::Operation do
       klass = Floop::Operation(:foo, :bar)
       expect(klass.superclass).to eq(Floop::Operation)
       expect(klass.attribute_names).to eq([:foo, :bar])
-      expect(klass.instance_methods).to include(:foo, :bar)
+      expect(klass.instance_methods).not_to include(:foo, :bar)
     end
 
     it "inherits from Floop::Operation using input attributes and block" do
       klass = Class.new(Floop::Operation(:foo, :bar))
       expect(klass.superclass.superclass).to eq(Floop::Operation)
       expect(klass.attribute_names).to eq([:foo, :bar])
-      expect(klass.instance_methods).to include(:foo, :bar)
+      expect(klass.instance_methods).not_to include(:foo, :bar)
     end
   end
 
@@ -102,8 +102,8 @@ RSpec.describe Floop::Operation do
     context "when the operation have attributes" do
       let(:operation) do
         Class.new(Floop::Operation(:foo, :bar)) do
-          def call!
-            Success(foo => bar)
+          def call!(foo:, bar:, **)
+            Success(foo: "foo", bar: "bar")
           end
         end
       end
@@ -111,8 +111,78 @@ RSpec.describe Floop::Operation do
       it "returns a Success result" do
         result = operation.call(foo: :foo, bar: :bar)
         expect(result).to be_success
-        expect(result.value).to eq(foo: :bar)
+        expect(result.value).to eq(foo: "foo", bar: "bar")
+      end
+
+      it "raises an error when the keyword attributes are not passed" do
+        expect { operation.call }.to raise_error(Floop::MissingAttributeError)
+      end
+
+      it "ignores extra attributes when global sloppy_attributes is enabled" do
+        Floop.config.sloppy_attributes = true
+        result = operation.call(foo: :foo, bar: :bar, baz: :baz)
+        expect(result).to be_success
+        expect(result.value).to eq(foo: "foo", bar: "bar")
+        reset_config!
+      end
+
+      it "ignores extra attributes when operation sloppy_attributes is enabled" do
+        operation.sloppy_attributes = true
+        expect(operation).to be_sloppy_attributes
+        result = operation.call(foo: :foo, bar: :bar, baz: :baz)
+        expect(result).to be_success
+        expect(result.value).to eq(foo: "foo", bar: "bar")
+        operation.sloppy_attributes = false
+      end
+    end
+
+    context "when the operation have transient flow attributes" do
+      let(:operation) do
+        Class.new(Floop::Operation(:foo)) do
+          attributes :bar
+          transient_attributes :baz
+
+          flow :foo, :bar, :baz, :wrap
+
+          def foo(foo:, **)
+            Success(foo: foo.to_s)
+          end
+
+          def bar(bar:, **)
+            Success(bar: bar.to_s, baz: :baz)
+          end
+
+          def baz(baz:, **)
+            Success(baz: baz.to_s)
+          end
+
+          def wrap(**attrs)
+            Success(attrs)
+          end
+        end
+      end
+
+      it "raises an error when the keyword from attributes are not passed" do
+        expect { operation.call }.to raise_error(Floop::MissingAttributeError)
+      end
+
+      it "ignores extra attributes that are merged during the flow execution when global sloppy_attributes is enabled" do
+        Floop.config.sloppy_transient_attributes = true
+        result = operation.call(foo: :foo, bar: :bar)
+        expect(result).to be_success
+        expect(result.value).to eq(foo: "foo", bar: "bar", baz: "baz")
+        reset_config!
+      end
+
+      it "ignores extra attributes that are merged during the flow execution when operation sloppy_transient_attributes is enabled" do
+        operation.sloppy_transient_attributes = true
+        expect(operation).to be_sloppy_transient_attributes
+        result = operation.call(foo: :foo, bar: :bar)
+        expect(result).to be_success
+        expect(result.value).to eq(foo: "foo", bar: "bar", baz: "baz")
+        operation.sloppy_transient_attributes = false
       end
     end
   end
+
 end

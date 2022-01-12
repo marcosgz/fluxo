@@ -5,6 +5,15 @@ module Floop
   class InvalidResultError < Error
   end
 
-  class InvalidValidationsError < Error
+  class AttributeError < Error
+  end
+
+  class NotDefinedAttributeError < AttributeError
+  end
+
+  class MissingAttributeError < AttributeError
+  end
+
+  class ValidationDefinitionError < Error
   end
 end

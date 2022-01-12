@@ -28,7 +28,6 @@ RSpec.describe "operation validations" do
     end
   end
 
-
   describe "with one validation block", active_model: true do
     let(:operation) do
       Class.new(Floop::Operation(:name, :age)) do

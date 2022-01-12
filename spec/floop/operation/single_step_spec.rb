@@ -3,7 +3,7 @@ require "spec_helper"
 RSpec.describe "operation execution with a single step" do
   let(:operation) do
     Class.new(Floop::Operation(:a, :b)) do
-      def call!
+      def call!(a:, b:)
         return Failure(:a) { ":a must be different than zero" } if a == 0
         return Failure(":b must be different than zero") if b == 0
 
@@ -73,7 +73,7 @@ RSpec.describe "operation execution with a single step" do
   describe ".on_error" do
     let(:operation) do
       Class.new(Floop::Operation(:exception)) do
-        def call!
+        def call!(exception:)
           raise exception
         end
       end

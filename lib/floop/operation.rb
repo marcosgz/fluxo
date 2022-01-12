@@ -12,29 +12,21 @@ module Floop
 
     class << self
       def flow(*methods)
-        define_method(:call!) { |**| __execute_flow__(steps: methods) }
+        define_method(:call!) { |**attrs| __execute_flow__(steps: methods, attributes: attrs) }
       end
 
       def call(**attrs)
-        instance = new(**attrs) # @idea pass attributes as argument to the first step to make it imutable
+        instance = new
 
         begin
-          instance.__execute_flow__(steps: [:call!])
-        rescue InvalidResultError, InvalidValidationsError => e
+          instance.__execute_flow__(steps: [:call!], attributes: attrs)
+        rescue InvalidResultError, AttributeError, ValidationDefinitionError => e
           raise e
         rescue => e
           Floop::Result.new(type: :exception, value: e, operation: instance, ids: %i[error]).tap do |result|
             Floop.config.error_handlers.each { |handler| handler.call(result) }
           end
         end
-      end
-    end
-
-    def initialize(**attrs)
-      attrs.each do |key, value|
-        raise(ArgumentError, "Undefined #{key.inspect} attribute") unless self.class.attribute?(key)
-
-        instance_variable_set(:"@#{key}", value)
       end
     end
 
@@ -47,12 +39,23 @@ module Floop
 
     # Calls step-method by step-method always passing the value to the next step
     # If one of the methods is a failure stop the execution and return a result.
-    def __execute_flow__(steps: [])
+    def __execute_flow__(steps: [], attributes: {})
+      transient_attributes = attributes.dup
+      __validate_attributes__(first_step: steps.first, attributes: transient_attributes)
+
       result = nil
-      steps.unshift(:__validate__) if self.class.validations_proxy
-      steps.each do |step|
-        result = __wrap_result__(send(step))
+      steps.unshift(:__validate__) if self.class.validations_proxy # add validate step before the first step
+      steps.each_with_index do |step, idx|
+        result = __wrap_result__(send(step, **transient_attributes))
         break unless result.success?
+
+        if steps[idx + 1]
+          transient_attributes = __merge_result_attributes__(
+            new_attributes: result.value,
+            old_attributes: transient_attributes,
+            next_step: steps[idx + 1]
+          )
+        end
       end
       result
     end
@@ -87,8 +90,45 @@ module Floop
 
     private
 
-    def __validate__(**)
-      self.class.validations_proxy.validate!(self)
+    def __validate_attributes__(attributes:, first_step:)
+      if !self.class.sloppy_attributes? && (extra = attributes.keys - self.class.attribute_names).any?
+        raise NotDefinedAttributeError, <<~ERROR
+          The following attributes are not defined: #{extra.join(", ")}
+
+          You can use the #{self.class.name}.attributes method to specify list of allowed attributes.
+          Or you can disable strict attributes mode by setting the sloppy_attributes to true.
+        ERROR
+      end
+
+      method(first_step).parameters.select { |type, _| type == :keyreq }.each do |(_type, name)|
+        raise(MissingAttributeError, "Missing :#{name} attribute on #{self.class.name}#{first_step} step method.") unless attributes.key?(name)
+      end
+    end
+
+    def __merge_result_attributes__(new_attributes:, old_attributes:, next_step:)
+      return old_attributes unless new_attributes.is_a?(Hash)
+
+      attributes = old_attributes.merge(new_attributes)
+      allowed_attrs = self.class.attribute_names + self.class.transient_attribute_names
+      if !self.class.sloppy_transient_attributes? &&
+          (extra = attributes.keys - allowed_attrs).any?
+        raise NotDefinedAttributeError, <<~ERROR
+          The following transient attributes are not defined: #{extra.join(", ")}
+
+          You can use the #{self.class.name}.transient_attributes method to specify list of allowed attributes.
+          Or you can disable strict transient attributes mode by setting the sloppy_transient_attributes to true.
+        ERROR
+      end
+
+      method(next_step).parameters.select { |type, _| type == :keyreq }.each do |(_type, name)|
+        raise(MissingAttributeError, "Missing :#{name} transient attribute on #{self.class.name}##{next_step} step method.") unless attributes.key?(name)
+      end
+
+      attributes
+    end
+
+    def __validate__(**attributes)
+      self.class.validations_proxy.validate!(self, **attributes)
     end
 
     def __wrap_result__(result)
