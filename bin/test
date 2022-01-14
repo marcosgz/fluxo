@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+set -vx
+
+bundle exec rspec $@
+find ci -type f \( -iname "Gemfile.activemodel-*" ! -iname "*.lock" \) -exec bundle exec --gemfile {} rspec $@ \;

@@ -1,0 +1,21 @@
+# dist: trusty
+language: ruby
+before_install:
+  - gem --version
+  - gem update bundler
+  - gem --version
+  - bash ci/setup.sh
+
+jobs:
+  fast_finish: true
+  include:
+    - rvm: 2.6
+      gemfile: Gemfile
+    - rvm: 2.6
+      gemfile: ci/Gemfile.activemodel-4
+    - rvm: 2.6
+      gemfile: ci/Gemfile.activemodel-5
+    - rvm: 2.6
+      gemfile: ci/Gemfile.activemodel-6
+    - rvm: 2.7.2
+      gemfile: ci/Gemfile.activemodel-7

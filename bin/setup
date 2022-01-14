@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+set -vx
+
+bundle install --gemfile Gemfile
+find ci -type f \( -iname "Gemfile.activemodel-*" ! -iname "*.lock" \) -exec bundle install --gemfile {} \;
