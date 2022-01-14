@@ -91,12 +91,12 @@ module Fluxo
     private
 
     def __validate_attributes__(attributes:, first_step:)
-      if !self.class.sloppy_attributes? && (extra = attributes.keys - self.class.attribute_names).any?
+      if self.class.strict_attributes? && (extra = attributes.keys - self.class.attribute_names).any?
         raise NotDefinedAttributeError, <<~ERROR
           The following attributes are not defined: #{extra.join(", ")}
 
           You can use the #{self.class.name}.attributes method to specify list of allowed attributes.
-          Or you can disable strict attributes mode by setting the sloppy_attributes to true.
+          Or you can disable strict attributes mode by setting the strict_attributes to true.
         ERROR
       end
 
@@ -110,13 +110,13 @@ module Fluxo
 
       attributes = old_attributes.merge(new_attributes)
       allowed_attrs = self.class.attribute_names + self.class.transient_attribute_names
-      if !self.class.sloppy_transient_attributes? &&
+      if self.class.strict_transient_attributes? &&
           (extra = attributes.keys - allowed_attrs).any?
         raise NotDefinedAttributeError, <<~ERROR
           The following transient attributes are not defined: #{extra.join(", ")}
 
           You can use the #{self.class.name}.transient_attributes method to specify list of allowed attributes.
-          Or you can disable strict transient attributes mode by setting the sloppy_transient_attributes to true.
+          Or you can disable strict transient attributes mode by setting the strict_transient_attributes to true.
         ERROR
       end
 

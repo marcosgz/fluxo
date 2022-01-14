@@ -118,21 +118,21 @@ RSpec.describe Fluxo::Operation do
         expect { operation.call }.to raise_error(Fluxo::MissingAttributeError)
       end
 
-      it "ignores extra attributes when global sloppy_attributes is enabled" do
-        Fluxo.config.sloppy_attributes = true
+      it "ignores extra attributes when global strict_attributes is disabled" do
+        Fluxo.config.strict_attributes = false
         result = operation.call(foo: :foo, bar: :bar, baz: :baz)
         expect(result).to be_success
         expect(result.value).to eq(foo: "foo", bar: "bar")
         reset_config!
       end
 
-      it "ignores extra attributes when operation sloppy_attributes is enabled" do
-        operation.sloppy_attributes = true
-        expect(operation).to be_sloppy_attributes
+      it "ignores extra attributes when operation strict_attributes is disabled" do
+        operation.strict_attributes = false
+        expect(operation).not_to be_strict_attributes
         result = operation.call(foo: :foo, bar: :bar, baz: :baz)
         expect(result).to be_success
         expect(result.value).to eq(foo: "foo", bar: "bar")
-        operation.sloppy_attributes = false
+        operation.strict_attributes = true
       end
     end
 
@@ -166,21 +166,21 @@ RSpec.describe Fluxo::Operation do
         expect { operation.call }.to raise_error(Fluxo::MissingAttributeError)
       end
 
-      it "ignores extra attributes that are merged during the flow execution when global sloppy_attributes is enabled" do
-        Fluxo.config.sloppy_transient_attributes = true
+      it "ignores extra attributes that are merged during the flow execution when global strict_attributes is enabled" do
+        Fluxo.config.strict_transient_attributes = false
         result = operation.call(foo: :foo, bar: :bar)
         expect(result).to be_success
         expect(result.value).to eq(foo: "foo", bar: "bar", baz: "baz")
         reset_config!
       end
 
-      it "ignores extra attributes that are merged during the flow execution when operation sloppy_transient_attributes is enabled" do
-        operation.sloppy_transient_attributes = true
-        expect(operation).to be_sloppy_transient_attributes
+      it "ignores extra attributes that are merged during the flow execution when operation strict_transient_attributes is enabled" do
+        operation.strict_transient_attributes = false
+        expect(operation).not_to be_strict_transient_attributes
         result = operation.call(foo: :foo, bar: :bar)
         expect(result).to be_success
         expect(result.value).to eq(foo: "foo", bar: "bar", baz: "baz")
-        operation.sloppy_transient_attributes = false
+        operation.strict_transient_attributes = true
       end
     end
   end

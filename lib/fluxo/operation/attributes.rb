@@ -11,21 +11,21 @@ module Fluxo
         attr_reader :validations_proxy
 
         # When set to true, the operation will not validate the transient_attributes defition during the flow step execution.
-        attr_writer :sloppy_transient_attributes
+        attr_writer :strict_transient_attributes
 
         # When set to true, the operation will not validate attributes definition before calling the operation.
-        attr_writer :sloppy_attributes
+        attr_writer :strict_attributes
 
-        def sloppy_attributes?
-          return @sloppy_attributes if defined?(@sloppy_attributes)
+        def strict_attributes?
+          return @strict_attributes if defined?(@strict_attributes)
 
-          Fluxo.config.sloppy_attributes
+          Fluxo.config.strict_attributes
         end
 
-        def sloppy_transient_attributes?
-          return @sloppy_transient_attributes if defined?(@sloppy_transient_attributes)
+        def strict_transient_attributes?
+          return @strict_transient_attributes if defined?(@strict_transient_attributes)
 
-          Fluxo.config.sloppy_transient_attributes
+          Fluxo.config.strict_transient_attributes
         end
 
         def validations
