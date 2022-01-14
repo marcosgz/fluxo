@@ -3,12 +3,12 @@
 require_relative "operation/constructor"
 require_relative "operation/attributes"
 
-module Floop
+module Fluxo
   class Operation
     include Attributes
     include Constructor
 
-    def_Operation(::Floop)
+    def_Operation(::Fluxo)
 
     class << self
       def flow(*methods)
@@ -23,8 +23,8 @@ module Floop
         rescue InvalidResultError, AttributeError, ValidationDefinitionError => e
           raise e
         rescue => e
-          Floop::Result.new(type: :exception, value: e, operation: instance, ids: %i[error]).tap do |result|
-            Floop.config.error_handlers.each { |handler| handler.call(result) }
+          Fluxo::Result.new(type: :exception, value: e, operation: instance, ids: %i[error]).tap do |result|
+            Fluxo.config.error_handlers.each { |handler| handler.call(result) }
           end
         end
       end
@@ -69,7 +69,7 @@ module Floop
       else
         attrs[:value] = value_or_result_id
       end
-      Floop::Result.new(**attrs)
+      Fluxo::Result.new(**attrs)
     end
 
     # @param value_or_result_id [Any] The value for the result or the id when the result comes from block
@@ -81,7 +81,7 @@ module Floop
       else
         attrs[:value] = value_or_result_id
       end
-      Floop::Result.new(**attrs)
+      Fluxo::Result.new(**attrs)
     end
 
     def Void
@@ -132,19 +132,19 @@ module Floop
     end
 
     def __wrap_result__(result)
-      if result.is_a?(Floop::Result)
+      if result.is_a?(Fluxo::Result)
         return result
-      elsif Floop.config.wrap_falsey_result && !result
+      elsif Fluxo.config.wrap_falsey_result && !result
         return Failure(:falsey) { result }
-      elsif Floop.config.wrap_truthy_result && result
+      elsif Fluxo.config.wrap_truthy_result && result
         return Success(:truthy) { result }
       end
 
       raise InvalidResultError, <<~ERROR
-        The result of each step must be a Floop::Result.
+        The result of each step must be a Fluxo::Result.
         You can use the #Success() and #Failure() methods to create a result.
 
-        This behavior can be changed by setting the Floop.config.wrap_falsey_result and Floop.config.wrap_truthy_result
+        This behavior can be changed by setting the Fluxo.config.wrap_falsey_result and Fluxo.config.wrap_truthy_result
         configuration options.
 
         The result of the operation is: #{result.inspect}

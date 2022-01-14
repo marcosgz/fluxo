@@ -1,5 +1,5 @@
 
-module Floop
+module Fluxo
   module ActiveModelExtension
     module ClassMethods
       def validations(&block)
@@ -65,6 +65,6 @@ module Floop
   end
 
   class Operation
-    include Floop::ActiveModelExtension
+    include Fluxo::ActiveModelExtension
   end
 end

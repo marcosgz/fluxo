@@ -1,4 +1,4 @@
-module Floop
+module Fluxo
   class Error < StandardError
   end
 

@@ -2,7 +2,7 @@ require "spec_helper"
 
 RSpec.describe "operation execution with a single step" do
   let(:falsey_operation) do
-    Class.new(Floop::Operation) do
+    Class.new(Fluxo::Operation) do
       def call!
         nil
       end
@@ -10,7 +10,7 @@ RSpec.describe "operation execution with a single step" do
   end
 
   let(:truthy_operation) do
-    Class.new(Floop::Operation) do
+    Class.new(Fluxo::Operation) do
       def call!
         1
       end
@@ -19,7 +19,7 @@ RSpec.describe "operation execution with a single step" do
 
   context "when wrap_falsey_result is true" do
     before do
-      Floop.config.wrap_falsey_result = true
+      Fluxo.config.wrap_falsey_result = true
     end
 
     after do
@@ -34,7 +34,7 @@ RSpec.describe "operation execution with a single step" do
 
   context "when wrap_falsey_result is false" do
     before do
-      Floop.config.wrap_falsey_result = false
+      Fluxo.config.wrap_falsey_result = false
     end
 
     after do
@@ -42,13 +42,13 @@ RSpec.describe "operation execution with a single step" do
     end
 
     it "should raise InvalidResultError" do
-      expect { falsey_operation.call }.to raise_error(Floop::InvalidResultError)
+      expect { falsey_operation.call }.to raise_error(Fluxo::InvalidResultError)
     end
   end
 
   context "when wrap_truthy_result is true" do
     before do
-      Floop.config.wrap_truthy_result = true
+      Fluxo.config.wrap_truthy_result = true
     end
 
     after do
@@ -63,7 +63,7 @@ RSpec.describe "operation execution with a single step" do
 
   context "when wrap_truthy_result is false" do
     before do
-      Floop.config.wrap_truthy_result = false
+      Fluxo.config.wrap_truthy_result = false
     end
 
     after do
@@ -71,7 +71,7 @@ RSpec.describe "operation execution with a single step" do
     end
 
     it "should raise InvalidResultError" do
-      expect { truthy_operation.call }.to raise_error(Floop::InvalidResultError)
+      expect { truthy_operation.call }.to raise_error(Fluxo::InvalidResultError)
     end
   end
 end

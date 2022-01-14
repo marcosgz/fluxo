@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Floop
+module Fluxo
   class Operation
     module Attributes
       def self.included(klass)
@@ -19,13 +19,13 @@ module Floop
         def sloppy_attributes?
           return @sloppy_attributes if defined?(@sloppy_attributes)
 
-          Floop.config.sloppy_attributes
+          Fluxo.config.sloppy_attributes
         end
 
         def sloppy_transient_attributes?
           return @sloppy_transient_attributes if defined?(@sloppy_transient_attributes)
 
-          Floop.config.sloppy_transient_attributes
+          Fluxo.config.sloppy_transient_attributes
         end
 
         def validations

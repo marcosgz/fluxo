@@ -1,19 +1,19 @@
-require_relative "lib/floop/version"
+require_relative "lib/fluxo/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "floop"
-  spec.version = Floop::VERSION
+  spec.name = "fluxo"
+  spec.version = Fluxo::VERSION
   spec.authors = ["Marcos G. Zimmermann"]
   spec.email = ["mgzmaster@gmail.com"]
 
   spec.summary = "Simple Ruby DSL to create operation service objects."
   spec.description = "Simple Ruby DSL to create operation service objects"
-  spec.homepage = "https://github.com/marcosgz/floop"
+  spec.homepage = "https://github.com/marcosgz/fluxo"
   spec.license = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/marcosgz/floop"
+  spec.metadata["source_code_uri"] = "https://github.com/marcosgz/fluxo"
   # spec.metadata["changelog_uri"] = "TODO: Put your gem's CHANGELOG.md URL here."
 
   # Specify which files should be added to the gem when it is released.

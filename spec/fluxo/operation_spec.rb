@@ -1,27 +1,27 @@
 require "spec_helper"
 
-RSpec.describe Floop::Operation do
+RSpec.describe Fluxo::Operation do
   it "returns a class" do
-    expect(Floop::Operation).to be_a(Class)
+    expect(Fluxo::Operation).to be_a(Class)
   end
 
-  it "returns a class that inherits from Floop::Operation" do
-    klass = Class.new(Floop::Operation)
-    expect(klass.superclass).to eq(Floop::Operation)
+  it "returns a class that inherits from Fluxo::Operation" do
+    klass = Class.new(Fluxo::Operation)
+    expect(klass.superclass).to eq(Fluxo::Operation)
     expect(klass.attribute_names).to eq([])
   end
 
   describe ".Opearation" do
     it "define attributes an return operation superclass" do
-      klass = Floop::Operation(:foo, :bar)
-      expect(klass.superclass).to eq(Floop::Operation)
+      klass = Fluxo::Operation(:foo, :bar)
+      expect(klass.superclass).to eq(Fluxo::Operation)
       expect(klass.attribute_names).to eq([:foo, :bar])
       expect(klass.instance_methods).not_to include(:foo, :bar)
     end
 
-    it "inherits from Floop::Operation using input attributes and block" do
-      klass = Class.new(Floop::Operation(:foo, :bar))
-      expect(klass.superclass.superclass).to eq(Floop::Operation)
+    it "inherits from Fluxo::Operation using input attributes and block" do
+      klass = Class.new(Fluxo::Operation(:foo, :bar))
+      expect(klass.superclass.superclass).to eq(Fluxo::Operation)
       expect(klass.attribute_names).to eq([:foo, :bar])
       expect(klass.instance_methods).not_to include(:foo, :bar)
     end
@@ -29,7 +29,7 @@ RSpec.describe Floop::Operation do
 
   describe ".attributes" do
     it "sets the attributes" do
-      klass = Class.new(Floop::Operation)
+      klass = Class.new(Fluxo::Operation)
       klass.attributes(:foo, :bar)
       expect(klass.attribute_names).to eq([:foo, :bar])
       expect(klass).to be_attribute(:foo)
@@ -38,7 +38,7 @@ RSpec.describe Floop::Operation do
     end
 
     it "ignores duplicated attributes" do
-      klass = Class.new(Floop::Operation)
+      klass = Class.new(Fluxo::Operation)
       klass.attributes(:foo, :bar)
       expect(klass.attribute_names).to eq([:foo, :bar])
       klass.attributes(:foo, :bar)
@@ -49,7 +49,7 @@ RSpec.describe Floop::Operation do
   describe ".call" do
     context "when the call! method is not defined" do
       let(:operation) do
-        Class.new(Floop::Operation)
+        Class.new(Fluxo::Operation)
       end
 
       it "raises an error" do
@@ -59,7 +59,7 @@ RSpec.describe Floop::Operation do
 
     context "when the call! method is defined with a Success result" do
       let(:operation) do
-        Class.new(Floop::Operation) do
+        Class.new(Fluxo::Operation) do
           def call!
             Success(:foo)
           end
@@ -73,7 +73,7 @@ RSpec.describe Floop::Operation do
 
     context "when the call! method is defined with a Failure result" do
       let(:operation) do
-        Class.new(Floop::Operation) do
+        Class.new(Fluxo::Operation) do
           def call!
             Failure(:foo)
           end
@@ -87,7 +87,7 @@ RSpec.describe Floop::Operation do
 
     context "when the call! method is defined with a Void result" do
       let(:operation) do
-        Class.new(Floop::Operation) do
+        Class.new(Fluxo::Operation) do
           def call!
             Void()
           end
@@ -101,7 +101,7 @@ RSpec.describe Floop::Operation do
 
     context "when the operation have attributes" do
       let(:operation) do
-        Class.new(Floop::Operation(:foo, :bar)) do
+        Class.new(Fluxo::Operation(:foo, :bar)) do
           def call!(foo:, bar:, **)
             Success(foo: "foo", bar: "bar")
           end
@@ -115,11 +115,11 @@ RSpec.describe Floop::Operation do
       end
 
       it "raises an error when the keyword attributes are not passed" do
-        expect { operation.call }.to raise_error(Floop::MissingAttributeError)
+        expect { operation.call }.to raise_error(Fluxo::MissingAttributeError)
       end
 
       it "ignores extra attributes when global sloppy_attributes is enabled" do
-        Floop.config.sloppy_attributes = true
+        Fluxo.config.sloppy_attributes = true
         result = operation.call(foo: :foo, bar: :bar, baz: :baz)
         expect(result).to be_success
         expect(result.value).to eq(foo: "foo", bar: "bar")
@@ -138,7 +138,7 @@ RSpec.describe Floop::Operation do
 
     context "when the operation have transient flow attributes" do
       let(:operation) do
-        Class.new(Floop::Operation(:foo)) do
+        Class.new(Fluxo::Operation(:foo)) do
           attributes :bar
           transient_attributes :baz
 
@@ -163,11 +163,11 @@ RSpec.describe Floop::Operation do
       end
 
       it "raises an error when the keyword from attributes are not passed" do
-        expect { operation.call }.to raise_error(Floop::MissingAttributeError)
+        expect { operation.call }.to raise_error(Fluxo::MissingAttributeError)
       end
 
       it "ignores extra attributes that are merged during the flow execution when global sloppy_attributes is enabled" do
-        Floop.config.sloppy_transient_attributes = true
+        Fluxo.config.sloppy_transient_attributes = true
         result = operation.call(foo: :foo, bar: :bar)
         expect(result).to be_success
         expect(result.value).to eq(foo: "foo", bar: "bar", baz: "baz")

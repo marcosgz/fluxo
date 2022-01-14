@@ -3,7 +3,7 @@ require "spec_helper"
 RSpec.describe "operation error handlers" do
   describe ".on_error" do
     let(:operation_class) do
-      Class.new(Floop::Operation) do
+      Class.new(Fluxo::Operation) do
         def call!
           raise StandardError, "internal error"
         end
@@ -13,14 +13,14 @@ RSpec.describe "operation error handlers" do
     let(:error_handler) { double("error handler") }
 
     before do
-      expect(error_handler).to receive(:call).with(Floop::Result)
-      Floop.config do |config|
+      expect(error_handler).to receive(:call).with(Fluxo::Result)
+      Fluxo.config do |config|
         config.error_handlers << error_handler
       end
     end
 
     after do
-      Floop.config do |config|
+      Fluxo.config do |config|
         config.error_handlers.clear
       end
     end

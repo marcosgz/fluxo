@@ -1,7 +1,7 @@
 PATH
   remote: ..
   specs:
-    floop (0.1.0)
+    fluxo (0.1.0)
 
 GEM
   remote: https://rubygems.org/
@@ -71,7 +71,7 @@ PLATFORMS
 
 DEPENDENCIES
   activemodel (~> 7.0)
-  floop!
+  fluxo!
   pry
   rake (~> 12.0)
   rspec

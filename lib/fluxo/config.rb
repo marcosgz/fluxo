@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Floop
+module Fluxo
   def self.config
     @config ||= Config.new
     yield(@config) if block_given?

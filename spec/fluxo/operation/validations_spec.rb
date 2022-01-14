@@ -30,7 +30,7 @@ RSpec.describe "operation validations" do
 
   describe "with one validation block", active_model: true do
     let(:operation) do
-      Class.new(Floop::Operation(:name, :age)) do
+      Class.new(Fluxo::Operation(:name, :age)) do
         validations do
           validates :name, presence: true
           validates :age, numericality: {greater_than: 18}
@@ -47,7 +47,7 @@ RSpec.describe "operation validations" do
 
   context "when multiple validations blocks", active_model: true do
     let(:operation) do
-      Class.new(Floop::Operation(:name, :age)) do
+      Class.new(Fluxo::Operation(:name, :age)) do
         validations do
           validates :name, presence: true
         end
@@ -67,7 +67,7 @@ RSpec.describe "operation validations" do
 
   context "when active model is not available", active_model: false do
     let(:operation) do
-      Class.new(Floop::Operation(:name, :age)) do
+      Class.new(Fluxo::Operation(:name, :age)) do
         validations do
           validates :name, presence: true
           validates :age, numericality: {greater_than: 18}

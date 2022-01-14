@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Floop
+module Fluxo
   class Operation
     module Constructor
       def self.included(klass)

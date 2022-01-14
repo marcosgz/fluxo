@@ -1,10 +1,10 @@
 require "spec_helper"
 
-RSpec.describe Floop::Result do
+RSpec.describe Fluxo::Result do
   let(:ids) { nil }
   let(:value) { 1 }
   let(:type) { :ok }
-  let(:operation) { instance_double(Floop::Operation) }
+  let(:operation) { instance_double(Fluxo::Operation) }
   let(:attrs) do
     {operation: operation, type: type, value: value, ids: ids}
   end

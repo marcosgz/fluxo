@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "bundler/setup"
-require "floop"
+require "fluxo"
 require "pry"
 require "support/config_helpers"
 require "support/hooks/active_model"
