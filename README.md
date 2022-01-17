@@ -240,6 +240,18 @@ class CreateUserOperation < Fluxo::Operation(:name, :email)
 end
 ```
 
+### Configuration
+
+```ruby
+Fluxo.config do |config|
+  config.wrap_falsey_result = false
+  config.wrap_truthy_result = false
+  config.strict_attributes = true
+  config.strict_transient_attributes = true
+  config.error_handlers << ->(result) { Honeybadger.notify(result.value) }
+end
+```
+
 
 ## Development
 
