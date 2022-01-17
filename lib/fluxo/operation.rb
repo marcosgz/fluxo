@@ -4,6 +4,8 @@ require_relative "operation/constructor"
 require_relative "operation/attributes"
 
 module Fluxo
+  # I know that the underline instance method name is not the best, but I don't want to
+  # conflict with the Operation step methods that are going to inherit this class.
   class Operation
     include Attributes
     include Constructor
@@ -46,8 +48,18 @@ module Fluxo
       result = nil
       steps.unshift(:__validate__) if self.class.validations_proxy # add validate step before the first step
       steps.each_with_index do |step, idx|
-        result = __wrap_result__(send(step, **transient_attributes))
-        transient_ids.fetch(result.type).push(*result.ids)
+        if step.is_a?(Hash)
+          step.each do |group_method, group_steps|
+            send(group_method, **transient_attributes) do |group_attrs|
+              result = __execute_flow__(steps: group_steps, attributes: (group_attrs || transient_attributes))
+            end
+            break unless result.success?
+          end
+        else
+          result = __wrap_result__(send(step, **transient_attributes))
+          transient_ids.fetch(result.type).push(*result.ids)
+        end
+
         break unless result.success?
 
         if steps[idx + 1]
@@ -91,6 +103,11 @@ module Fluxo
 
     private
 
+    # Validates the operation was called with all the required keyword arguments.
+    # @param first_step [Symbol, Hash] The first step method
+    # @param attributes [Hash] The attributes to validate
+    # @return [void]
+    # @raise [MissingAttributeError] When a required attribute is missing
     def __validate_attributes__(attributes:, first_step:)
       if self.class.strict_attributes? && (extra = attributes.keys - self.class.attribute_names).any?
         raise NotDefinedAttributeError, <<~ERROR
@@ -101,11 +118,18 @@ module Fluxo
         ERROR
       end
 
-      method(first_step).parameters.select { |type, _| type == :keyreq }.each do |(_type, name)|
-        raise(MissingAttributeError, "Missing :#{name} attribute on #{self.class.name}#{first_step} step method.") unless attributes.key?(name)
+      __expand_step_method__(first_step).each do |step|
+        method(step).parameters.select { |type, _| type == :keyreq }.each do |(_type, name)|
+          raise(MissingAttributeError, "Missing :#{name} attribute on #{self.class.name}#{step} step method.") unless attributes.key?(name)
+        end
       end
     end
 
+    # Merge the result attributes with the new attributes. Also checks if the upcomming step
+    # has the required attributes and transient attributes to a valid execution.
+    # @param new_attributes [Hash] The new attributes
+    # @param old_attributes [Hash] The old attributes
+    # @param next_step [Symbol, Hash] The next step method
     def __merge_result_attributes__(new_attributes:, old_attributes:, next_step:)
       return old_attributes unless new_attributes.is_a?(Hash)
 
@@ -121,17 +145,40 @@ module Fluxo
         ERROR
       end
 
-      method(next_step).parameters.select { |type, _| type == :keyreq }.each do |(_type, name)|
-        raise(MissingAttributeError, "Missing :#{name} transient attribute on #{self.class.name}##{next_step} step method.") unless attributes.key?(name)
+      __expand_step_method__(next_step).each do |step|
+        method(step).parameters.select { |type, _| type == :keyreq }.each do |(_type, name)|
+          raise(MissingAttributeError, "Missing :#{name} transient attribute on #{self.class.name}##{step} step method.") unless attributes.key?(name)
+        end
       end
 
       attributes
     end
 
+    # Return the step method as an array. When it's a hash it suppose to be a
+    # be a step group. In this case return its first key and its first value as
+    # the array of step methods.
+    #
+    # @param step [Symbol, Hash] The step method name
+    def __expand_step_method__(step)
+      return [step] unless step.is_a?(Hash)
+
+      key, value = step.first
+      [key, Array(value).first].compact
+    end
+
+    # Execute active_model validation as a flow step.
+    # @param attributes [Hash] The attributes to validate
+    # @return [Fluxo::Result] The result of the validation
     def __validate__(**attributes)
       self.class.validations_proxy.validate!(self, **attributes)
     end
 
+    # Wrap the step method result in a Fluxo::Result object.
+    #
+    # @param result [Fluxo::Result, *Object] The object to wrap
+    # @raise [Fluxo::InvalidResultError] When the result is not a Fluxo::Result config
+    #  is set to not wrap results.
+    # @return [Fluxo::Result] The wrapped result
     def __wrap_result__(result)
       if result.is_a?(Fluxo::Result)
         return result
