@@ -238,6 +238,7 @@ class CreateUserOperation < Fluxo::Operation(:name, :email)
     Success(user)
   end
 end
+```
 
 
 ## Development
