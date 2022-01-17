@@ -240,6 +240,23 @@ class CreateUserOperation < Fluxo::Operation(:name, :email)
 end
 ```
 
+### Operation Validation
+
+If you have the `ActiveModel` gem installed, you can use the `validations` method to define validations on the operation.
+
+```ruby
+class SubscribeOperation < Fluxo::Operation(:name, :email)
+  validations do
+    validates :name, presence: true
+    validates :email, presence: true, format: { with: /\A[^@]+@[^@]+\z/ }
+  end
+
+  def call!(name:, email:)
+    # ...
+  end
+end
+```
+
 ### Configuration
 
 ```ruby
