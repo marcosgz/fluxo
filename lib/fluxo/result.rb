@@ -32,16 +32,16 @@ module Fluxo
       type == :exception
     end
 
-    def on_success(handler_id = nil)
-      tap { yield(self) if success? && (handler_id.nil? || ids.include?(handler_id)) }
+    def on_success(*handler_ids)
+      tap { yield(self) if success? && (handler_ids.none? || (ids & handler_ids).any?) }
     end
 
-    def on_failure(handler_id = nil)
-      tap { yield(self) if failure? && (handler_id.nil? || ids.include?(handler_id)) }
+    def on_failure(*handler_ids)
+      tap { yield(self) if failure? && (handler_ids.none? || (ids & handler_ids).any?) }
     end
 
-    def on_error(handler_id = nil)
-      tap { yield(self) if error? && (handler_id.nil? || ids.include?(handler_id)) }
+    def on_error(*handler_ids)
+      tap { yield(self) if error? && (handler_ids.none? || (ids & handler_ids).any?) }
     end
   end
 end

@@ -7,7 +7,8 @@ Gem::Specification.new do |spec|
   spec.email = ["mgzmaster@gmail.com"]
 
   spec.summary = "Simple Ruby DSL to create operation service objects."
-  spec.description = "Simple Ruby DSL to create operation service objects"
+  spec.description = "Provides a simple and powerful way to create operations service objects for complex workflows."
+
   spec.homepage = "https://github.com/marcosgz/fluxo"
   spec.license = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")

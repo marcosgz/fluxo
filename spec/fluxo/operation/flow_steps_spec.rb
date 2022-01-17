@@ -36,6 +36,30 @@ RSpec.describe "operation execution with a flow" do
       end
     end
 
+    context "when operation wraps the value of last step to a non-hash object" do
+      let(:operation_klass) do
+        Class.new(Fluxo::Operation(:num)) do
+          flow :parse, :double_and_wrap
+
+          private
+
+          def parse(num:, **)
+            Success(num: num.to_i)
+          end
+
+          def double_and_wrap(num:, **)
+            Success(num * 2)
+          end
+        end
+      end
+
+      it "executes all steps and return the value of last step as the Result value" do
+        result = operation_klass.call(num: "2")
+        expect(result).to be_success
+        expect(result.value).to eq(4)
+      end
+    end
+
     context "when operation uses transient attributes" do
       let(:operation_klass) do
         Class.new(Fluxo::Operation(:num)) do

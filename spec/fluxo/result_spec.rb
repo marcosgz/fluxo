@@ -41,6 +41,7 @@ RSpec.describe Fluxo::Result do
       let(:model) { described_class.new(**attrs) }
 
       it { expect { |b| model.on_success(:foo, &b) }.to yield_with_args(model) }
+      it { expect { |b| model.on_success(:foo, :bar, &b) }.to yield_with_args(model) }
       it { expect { |b| model.on_success(:bar, &b) }.not_to yield_control }
       it { expect { |b| model.on_failure(:foo, &b) }.not_to yield_control }
       it { expect { |b| model.on_error(:foo, &b) }.not_to yield_control }
@@ -61,6 +62,7 @@ RSpec.describe Fluxo::Result do
       let(:model) { described_class.new(**attrs) }
 
       it { expect { |b| model.on_error(:foo, &b) }.to yield_with_args(model) }
+      it { expect { |b| model.on_error(:foo, :bar, &b) }.to yield_with_args(model) }
       it { expect { |b| model.on_failure(:bar, &b) }.not_to yield_control }
       it { expect { |b| model.on_failure(:foo, &b) }.not_to yield_control }
       it { expect { |b| model.on_success(:foo, &b) }.not_to yield_control }
@@ -81,6 +83,7 @@ RSpec.describe Fluxo::Result do
       let(:model) { described_class.new(**attrs) }
 
       it { expect { |b| model.on_failure(:foo, &b) }.to yield_with_args(model) }
+      it { expect { |b| model.on_failure(:foo, :bar, &b) }.to yield_with_args(model) }
       it { expect { |b| model.on_failure(:bar, &b) }.not_to yield_control }
       it { expect { |b| model.on_success(:foo, &b) }.not_to yield_control }
       it { expect { |b| model.on_error(:foo, &b) }.not_to yield_control }
