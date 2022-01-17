@@ -2,7 +2,8 @@
 
 module Fluxo
   class Result
-    attr_reader :operation, :type, :value, :ids
+    attr_reader :operation, :type, :value
+    attr_accessor :ids
 
     # @param options [Hash]
     # @option options [Fluxo::Operation] :operation The operation instance that gererated this result

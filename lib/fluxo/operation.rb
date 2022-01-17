@@ -40,13 +40,14 @@ module Fluxo
     # Calls step-method by step-method always passing the value to the next step
     # If one of the methods is a failure stop the execution and return a result.
     def __execute_flow__(steps: [], attributes: {})
-      transient_attributes = attributes.dup
+      transient_attributes, transient_ids = attributes.dup, {ok: [], failure: [], exception: []}
       __validate_attributes__(first_step: steps.first, attributes: transient_attributes)
 
       result = nil
       steps.unshift(:__validate__) if self.class.validations_proxy # add validate step before the first step
       steps.each_with_index do |step, idx|
         result = __wrap_result__(send(step, **transient_attributes))
+        transient_ids.fetch(result.type).push(*result.ids)
         break unless result.success?
 
         if steps[idx + 1]
@@ -57,7 +58,7 @@ module Fluxo
           )
         end
       end
-      result
+      result.tap { |r| r.ids = transient_ids.fetch(r.type).uniq }
     end
 
     # @param value_or_result_id [Any] The value for the result or the id when the result comes from block
