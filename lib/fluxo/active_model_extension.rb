@@ -46,8 +46,8 @@ module Fluxo
         validator.class_eval <<-RUBY, __FILE__, __LINE__ + 1
           attr_accessor #{attribute_names.map(&:inspect).join(", ")}
 
-          def self.model_name
-            ::ActiveModel::Name.new(self, nil, %|#{name || "Anonymous"}|)
+          def self.name
+            "#{name || 'Fluxo::Operation'}::Validations"
           end
         RUBY
 

@@ -28,6 +28,39 @@ RSpec.describe "operation validations" do
     end
   end
 
+  describe "with validation of ", active_model: true do
+    let(:operation) do
+      Class.new(Fluxo::Operation(:foo)) do
+        transient_attributes :bar
+
+        flow :step1, :step2, {group: %i[step3 step4]}, :step5
+
+        validations do
+          validates :foo, presence: true
+        end
+
+        private
+
+        def group(**kwargs, &block)
+          block.call(**kwargs)
+          nil
+        end
+
+        # rubocop:disable Style/SingleLineMethods,Layout/EmptyLineBetweenDefs
+        def step1(foo:); Success(bar: "ok"); end
+        def step2(bar:, **); Void(); end
+        def step3(foo:, **); Void(); end
+        def step4(bar:, **); Void(); end
+        def step5(foo:, **); Success(:ok); end
+        # rubocop:enable Style/SingleLineMethods,Layout/EmptyLineBetweenDefs
+      end
+    end
+
+    it "does not execute validation on grouped flow steps" do
+      expect(operation.call(foo: "test")).to be_success
+    end
+  end
+
   describe "with one validation block", active_model: true do
     let(:operation) do
       Class.new(Fluxo::Operation(:name, :age)) do

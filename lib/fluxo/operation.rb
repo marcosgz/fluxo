@@ -41,17 +41,17 @@ module Fluxo
 
     # Calls step-method by step-method always passing the value to the next step
     # If one of the methods is a failure stop the execution and return a result.
-    def __execute_flow__(steps: [], attributes: {}, validate_attributes: true)
+    def __execute_flow__(steps: [], attributes: {}, validate: true)
       transient_attributes, transient_ids = attributes.dup, Hash.new { |h, k| h[k] = [] }
-      __validate_attributes__(first_step: steps.first, attributes: transient_attributes) if validate_attributes
+      __validate_attributes__(first_step: steps.first, attributes: transient_attributes) if validate
 
       result = nil
-      steps.unshift(:__validate__) if self.class.validations_proxy # add validate step before the first step
+      steps.unshift(:__validate__) if self.class.validations_proxy && validate # add validate step before the first step
       steps.each_with_index do |step, idx|
         if step.is_a?(Hash)
           step.each do |group_method, group_steps|
             send(group_method, **transient_attributes) do |group_attrs|
-              result = __execute_flow__(validate_attributes: false, steps: group_steps, attributes: (group_attrs || transient_attributes))
+              result = __execute_flow__(validate: false, steps: group_steps, attributes: (group_attrs || transient_attributes))
             end
             break unless result.success?
           end
