@@ -100,4 +100,31 @@ RSpec.describe "operation execution with a grouped flow steps" do
       expect(expected_result.value).to be_an_instance_of(ArgumentError)
     end
   end
+
+  describe "method attributes validation" do
+    let(:operation_klass) do
+      Class.new(Fluxo::Operation(:foo)) do
+        transient_attributes :bar
+        flow :step1, {group: %i[step2 step3]}, :step4
+
+        private
+
+        def group(**kwargs, &block)
+          block.call(**kwargs)
+          nil
+        end
+
+        # rubocop:disable Style/SingleLineMethods,Layout/EmptyLineBetweenDefs
+        def step1(foo:); Success(bar: "ok"); end
+        def step2(bar:); Void(); end
+        def step3(foo:, bar:); Void(); end
+        def step4(foo:); Success(:ok); end
+        # rubocop:enable Style/SingleLineMethods,Layout/EmptyLineBetweenDefs
+      end
+    end
+
+    it "does not validate attributes method identity on grouped steps" do
+      expect { operation_klass.call(foo: "ok") }.not_to raise_error
+    end
+  end
 end
