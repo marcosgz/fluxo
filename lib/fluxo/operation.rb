@@ -42,7 +42,7 @@ module Fluxo
     # Calls step-method by step-method always passing the value to the next step
     # If one of the methods is a failure stop the execution and return a result.
     def __execute_flow__(steps: [], attributes: {})
-      transient_attributes, transient_ids = attributes.dup, {ok: [], failure: [], exception: []}
+      transient_attributes, transient_ids = attributes.dup, Hash.new { |h, k| h[k] = [] }
       __validate_attributes__(first_step: steps.first, attributes: transient_attributes)
 
       result = nil
@@ -57,7 +57,7 @@ module Fluxo
           end
         else
           result = __wrap_result__(send(step, **transient_attributes))
-          transient_ids.fetch(result.type).push(*result.ids)
+          transient_ids[result.type].push(*result.ids)
         end
 
         break unless result.success?
@@ -70,7 +70,7 @@ module Fluxo
           )
         end
       end
-      result.tap { |r| r.ids = transient_ids.fetch(r.type).uniq }
+      result.mutate(ids: transient_ids[result.type].uniq, operation: self)
     end
 
     # @param value_or_result_id [Any] The value for the result or the id when the result comes from block

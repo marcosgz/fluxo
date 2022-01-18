@@ -257,6 +257,40 @@ class SubscribeOperation < Fluxo::Operation(:name, :email)
 end
 ```
 
+### Operations Composition
+
+To promote single responsibility principle, Fluxo allows compose a complex operation flow by combining other operations.
+
+```ruby
+class DoubleOperation < Fluxo::Operation(:num)
+  def call!(num:)
+    Success(num: num * 2)
+  end
+end
+
+class SquareOperation < Fluxo::Operation(:num)
+  def call!(num:)
+    Success(num: num * 2)
+  end
+end
+
+class ArithmeticOperation < Fluxo::Operation(:num)
+  flow :normalize, :double, :square
+
+  def normalize(num:)
+    Success(num: num.to_i)
+  end
+
+  def double(num:)
+    DoubleOperation.call(num: num)
+  end
+
+  def square(num:)
+    SquareOperation.call(num: num)
+  end
+end
+```
+
 ### Configuration
 
 ```ruby

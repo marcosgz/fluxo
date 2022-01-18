@@ -89,4 +89,67 @@ RSpec.describe Fluxo::Result do
       it { expect { |b| model.on_error(:foo, &b) }.not_to yield_control }
     end
   end
+
+  describe "#mutate" do
+    let(:model) { described_class.new(**attrs) }
+    let(:new_value) { 2 }
+    let(:new_type) { :failure }
+    let(:new_ids) { %i[foo] }
+    let(:new_operation) { instance_double(Fluxo::Operation) }
+
+    it "returns a new model with the new attributes" do
+      expect(model.mutate(operation: new_operation, value: new_value, type: new_type, ids: new_ids)).to eq(
+        described_class.new(
+          operation: new_operation,
+          type: new_type,
+          value: new_value,
+          ids: new_ids
+        )
+      )
+    end
+
+    it "returns a new model with modified operation" do
+      expect(model.mutate(operation: new_operation)).to eq(
+        described_class.new(
+          operation: new_operation,
+          type: model.type,
+          value: model.value,
+          ids: model.ids
+        )
+      )
+    end
+
+    it "returns a new model with modified type" do
+      expect(model.mutate(type: new_type)).to eq(
+        described_class.new(
+          operation: model.operation,
+          type: new_type,
+          value: model.value,
+          ids: model.ids
+        )
+      )
+    end
+
+    it "returns a new model with modified value" do
+      expect(model.mutate(value: new_value)).to eq(
+        described_class.new(
+          operation: model.operation,
+          type: model.type,
+          value: new_value,
+          ids: model.ids
+        )
+      )
+    end
+
+    it "returns a new model with modified ids" do
+      expect(model.mutate(ids: new_ids)).to eq(
+        described_class.new(
+          operation: model.operation,
+          type: model.type,
+          value: model.value,
+          ids: new_ids
+        )
+      )
+    end
+  end
 end

@@ -2,8 +2,7 @@
 
 module Fluxo
   class Result
-    attr_reader :operation, :type, :value
-    attr_accessor :ids
+    attr_reader :operation, :type, :value, :ids
 
     # @param options [Hash]
     # @option options [Fluxo::Operation] :operation The operation instance that gererated this result
@@ -16,6 +15,15 @@ module Fluxo
       @type = type
       @ids = Array(ids)
     end
+
+    def mutate(**attrs)
+      self.class.new(**{operation: operation, type: type, value: value, ids: ids}.merge(attrs))
+    end
+
+    def ==(other)
+      other.is_a?(self.class) && other.operation == operation && other.type == type && other.value == value && other.ids == ids
+    end
+    alias_method :eql?, :==
 
     # @return [Boolean] true if the result is a success
     def success?
