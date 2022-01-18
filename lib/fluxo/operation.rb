@@ -115,6 +115,8 @@ module Fluxo
 
           You can use the #{self.class.name}.attributes method to specify list of allowed attributes.
           Or you can disable strict attributes mode by setting the strict_attributes to true.
+          Source:
+          #{__method_source__(first_step)}
         ERROR
       end
 
@@ -142,6 +144,9 @@ module Fluxo
 
           You can use the #{self.class.name}.transient_attributes method to specify list of allowed attributes.
           Or you can disable strict transient attributes mode by setting the strict_transient_attributes to true.
+
+          Source:
+          #{__method_source__(next_step)}
         ERROR
       end
 
@@ -153,6 +158,16 @@ module Fluxo
 
       attributes
     end
+
+    def __method_source__(step)
+      __expand_step_method__(step).map do |method_name|
+        format("* %<method_name>s: %<source>s",
+          method_name: method_name,
+          source: method(method_name).source_location.join(":"),
+        )
+      end.join("\n")
+    end
+
 
     # Return the step method as an array. When it's a hash it suppose to be a
     # be a step group. In this case return its first key and its first value as
