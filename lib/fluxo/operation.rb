@@ -115,15 +115,15 @@ module Fluxo
 
           You can use the #{self.class.name}.attributes method to specify list of allowed attributes.
           Or you can disable strict attributes mode by setting the strict_attributes to true.
+
           Source:
           #{__method_source__(first_step)}
         ERROR
       end
 
-      __expand_step_method__(first_step).each do |step|
-        method(step).parameters.select { |type, _| type == :keyreq }.each do |(_type, name)|
-          raise(MissingAttributeError, "Missing :#{name} attribute on #{self.class.name}#{step} step method.") unless attributes.key?(name)
-        end
+      step_method = __expand_step_method__(first_step)
+      method(step_method).parameters.select { |type, _| type == :keyreq }.each do |(_type, name)|
+        raise(MissingAttributeError, "Missing :#{name} attribute on #{self.class.name}#{step_method} step method.") unless attributes.key?(name)
       end
     end
 
@@ -150,24 +150,21 @@ module Fluxo
         ERROR
       end
 
-      __expand_step_method__(next_step).each do |step|
-        method(step).parameters.select { |type, _| type == :keyreq }.each do |(_type, name)|
-          raise(MissingAttributeError, "Missing :#{name} transient attribute on #{self.class.name}##{step} step method.") unless attributes.key?(name)
-        end
+      step_method = __expand_step_method__(next_step)
+      method(step_method).parameters.select { |type, _| type == :keyreq }.each do |(_type, name)|
+        raise(MissingAttributeError, "Missing :#{name} transient attribute on #{self.class.name}##{step_method} step method.") unless attributes.key?(name)
       end
 
       attributes
     end
 
     def __method_source__(step)
-      __expand_step_method__(step).map do |method_name|
-        format("* %<method_name>s: %<source>s",
-          method_name: method_name,
-          source: method(method_name).source_location.join(":"),
-        )
-      end.join("\n")
+      method_name = __expand_step_method__(step)
+      format("* %<method_name>s: %<source>s",
+        method_name: method_name,
+        source: method(method_name).source_location.join(":"),
+      )
     end
-
 
     # Return the step method as an array. When it's a hash it suppose to be a
     # be a step group. In this case return its first key and its first value as
@@ -175,10 +172,9 @@ module Fluxo
     #
     # @param step [Symbol, Hash] The step method name
     def __expand_step_method__(step)
-      return [step] unless step.is_a?(Hash)
+      return step unless step.is_a?(Hash)
 
-      key, value = step.first
-      [key, Array(value).first].compact
+      step.keys.first
     end
 
     # Execute active_model validation as a flow step.
