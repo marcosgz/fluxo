@@ -18,7 +18,7 @@ module Fluxo
 
         begin
           instance.__execute_flow__(steps: [:call!], attributes: attrs)
-        rescue ArgumentError, Fluxo::Error => e
+        rescue SyntaxError, ArgumentError, NoMethodError, Fluxo::Error => e
           raise e
         rescue => e
           result = Fluxo::Result.new(type: :exception, value: e, operation: instance, ids: %i[error])
@@ -41,6 +41,7 @@ module Fluxo
       transient_attributes, transient_ids = attributes.dup, Hash.new { |h, k| h[k] = [] }
 
       result = nil
+      steps.unshift(:__validate_required_attributes__) if self.class.required_attributes.any? && validate
       steps.unshift(:__validate__) if self.class.validations_proxy && validate # add validate step before the first step
       steps.each_with_index do |step, idx|
         if step.is_a?(Hash)
@@ -109,12 +110,28 @@ module Fluxo
       old_attributes.merge(new_attributes.select { |k, _| k.is_a?(Symbol) })
     end
 
-
     # Execute active_model validation as a flow step.
     # @param attributes [Hash] The attributes to validate
     # @return [Fluxo::Result] The result of the validation
     def __validate__(**attributes)
       self.class.validations_proxy.validate!(self, **attributes)
+    end
+
+    # Validates the operation was called with all the required keyword arguments.
+    # @param attributes [Hash] The attributes to validate
+    # @return [Fluxo::Result] The result of the validation
+    # @raise [ArgumentError] When a required attribute is missing
+    def __validate_required_attributes__(**attributes)
+      missing = self.class.required_attributes - attributes.keys
+      return Success(:required_attributes) { nil } if missing.none?
+
+      if self.class.strict?
+        raise ArgumentError, "Missing required attributes: #{missing.join(", ")}"
+      else
+        Failure(:required_attributes) do
+          {error: "Missing required attributes: #{missing.join(", ")}"}
+        end
+      end
     end
 
     # Wrap the step method result in a Fluxo::Result object.

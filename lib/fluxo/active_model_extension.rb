@@ -48,6 +48,10 @@ module Fluxo
           def self.name
             "#{name || 'Fluxo::Operation'}::Validations"
           end
+
+          def self.to_s
+            name
+          end
         RUBY
 
         validator

@@ -23,6 +23,21 @@ module Fluxo
         def validations
           raise NotImplementedError, "ActiveModel is not defined to use validations."
         end
+
+        def required_attributes
+          @required_attributes ||= []
+        end
+
+        def require_attributes(*attributes)
+          @required_attributes ||= []
+          @required_attributes |= attributes
+        end
+        alias_method :require_attribute, :require_attributes
+        alias_method :attributes, :require_attributes
+
+        def transient_attributes(*)
+          puts "DEPRECATED: #{__method__} is deprecated. Operation runs on sloppy mode by allowing any transient attribute."
+        end
       end
     end
   end
