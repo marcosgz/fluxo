@@ -8,26 +8,6 @@ RSpec.describe Fluxo::Operation do
   it "returns a class that inherits from Fluxo::Operation" do
     klass = Class.new(Fluxo::Operation)
     expect(klass.superclass).to eq(Fluxo::Operation)
-    expect(klass.attribute_names).to eq([])
-  end
-
-  describe ".attributes" do
-    it "sets the attributes" do
-      klass = Class.new(Fluxo::Operation)
-      klass.attributes(:foo, :bar)
-      expect(klass.attribute_names).to eq([:foo, :bar])
-      expect(klass).to be_attribute(:foo)
-      expect(klass).to be_attribute(:bar)
-      expect(klass).not_to be_attribute(:baz)
-    end
-
-    it "ignores duplicated attributes" do
-      klass = Class.new(Fluxo::Operation)
-      klass.attributes(:foo, :bar)
-      expect(klass.attribute_names).to eq([:foo, :bar])
-      klass.attributes(:foo, :bar)
-      expect(klass.attribute_names).to eq([:foo, :bar])
-    end
   end
 
   describe ".call" do
@@ -86,10 +66,8 @@ RSpec.describe Fluxo::Operation do
     context "when the operation have attributes" do
       let(:operation) do
         Class.new(Fluxo::Operation) do
-          attributes :foo, :bar
-
           def call!(foo:, bar:, **)
-            Success(foo: "foo", bar: "bar")
+            Success(foo: foo.to_s, bar: bar.to_s)
           end
         end
       end
@@ -101,34 +79,13 @@ RSpec.describe Fluxo::Operation do
       end
 
       it "raises an error when the keyword attributes are not passed" do
-        expect { operation.call }.to raise_error(Fluxo::MissingAttributeError)
-      end
-
-      it "ignores extra attributes when global strict_attributes is disabled" do
-        Fluxo.config.strict_attributes = false
-        result = operation.call(foo: :foo, bar: :bar, baz: :baz)
-        expect(result).to be_success
-        expect(result.value).to eq(foo: "foo", bar: "bar")
-        reset_config!
-      end
-
-      it "ignores extra attributes when operation strict_attributes is disabled" do
-        operation.strict_attributes = false
-        expect(operation).not_to be_strict_attributes
-        result = operation.call(foo: :foo, bar: :bar, baz: :baz)
-        expect(result).to be_success
-        expect(result.value).to eq(foo: "foo", bar: "bar")
-        operation.strict_attributes = true
+        expect { operation.call }.to raise_error(ArgumentError)
       end
     end
 
     context "when the operation have transient flow attributes" do
       let(:operation) do
         Class.new(Fluxo::Operation) do
-          attributes :bar, :foo
-
-          transient_attributes :baz
-
           flow :foo, :bar, :baz, :wrap
 
           def foo(foo:, **)
@@ -150,24 +107,14 @@ RSpec.describe Fluxo::Operation do
       end
 
       it "raises an error when the keyword from attributes are not passed" do
-        expect { operation.call }.to raise_error(Fluxo::MissingAttributeError)
+        expect { operation.call }.to raise_error(ArgumentError)
       end
 
-      it "ignores extra attributes that are merged during the flow execution when global strict_attributes is enabled" do
-        Fluxo.config.strict_transient_attributes = false
+      specify do
         result = operation.call(foo: :foo, bar: :bar)
         expect(result).to be_success
         expect(result.value).to eq(foo: "foo", bar: "bar", baz: "baz")
         reset_config!
-      end
-
-      it "ignores extra attributes that are merged during the flow execution when operation strict_transient_attributes is enabled" do
-        operation.strict_transient_attributes = false
-        expect(operation).not_to be_strict_transient_attributes
-        result = operation.call(foo: :foo, bar: :bar)
-        expect(result).to be_success
-        expect(result.value).to eq(foo: "foo", bar: "bar", baz: "baz")
-        operation.strict_transient_attributes = true
       end
     end
   end

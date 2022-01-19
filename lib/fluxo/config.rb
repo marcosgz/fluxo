@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
 module Fluxo
-  def self.config
-    @config ||= Config.new
-    yield(@config) if block_given?
-    @config
+  class << self
+    def config
+      @config ||= Config.new
+      yield(@config) if block_given?
+      @config
+    end
+    alias_method :configure, :config
   end
 
   class Config
@@ -16,18 +19,18 @@ module Fluxo
     # When set to true, the result of a truthy operation will be wrapped in a Success.
     attr_accessor :wrap_truthy_result
 
-    # When set to true, the operation will not validate the transient_attributes defition during the flow step execution.
-    attr_accessor :strict_transient_attributes
-
-    # When set to true, the operation will not validate attributes definition before calling the operation.
-    attr_accessor :strict_attributes
+    # Auto handle errors/exceptions.
+    attr_writer :strict
 
     def initialize
       @error_handlers = []
       @wrap_falsey_result = false
       @wrap_truthy_result = false
-      @strict_transient_attributes = true
-      @strict_attributes = true
+      @strict = false
+    end
+
+    def strict?
+      !!@strict
     end
   end
 end

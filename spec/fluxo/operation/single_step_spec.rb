@@ -3,7 +3,6 @@ require "spec_helper"
 RSpec.describe "operation execution with a single step" do
   let(:operation) do
     Class.new(Fluxo::Operation) do
-      attributes :a, :b
       def call!(a:, b:)
         return Failure(:a) { ":a must be different than zero" } if a == 0
         return Failure(":b must be different than zero") if b == 0
@@ -74,7 +73,6 @@ RSpec.describe "operation execution with a single step" do
   describe ".on_error" do
     let(:operation) do
       Class.new(Fluxo::Operation) do
-        attributes :exception
         def call!(exception:)
           raise exception
         end
@@ -83,6 +81,9 @@ RSpec.describe "operation execution with a single step" do
     let(:exception) { StandardError.new("error") }
 
     specify do
+      expect { operation.call(exception: exception) }.to raise_error(exception)
+
+      operation.strict = false
       count = 0
       expected_value = nil
       expected_result = operation

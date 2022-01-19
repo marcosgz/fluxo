@@ -4,8 +4,6 @@ RSpec.describe "operation execution with a flow with external operation result" 
   describe ".on_success" do
     let(:double_operation_klass) do
       Class.new(Fluxo::Operation) do
-        attributes :num
-
         def call!(num:)
           Success(:result) { {num: num * 2} }
         end
@@ -14,7 +12,6 @@ RSpec.describe "operation execution with a flow with external operation result" 
 
     let(:main_operation_klass) do
       Class.new(Fluxo::Operation) do
-        attributes :num, :external
         flow :plus_one, :double
 
         private
@@ -41,8 +38,6 @@ RSpec.describe "operation execution with a flow with external operation result" 
   describe ".on_failure" do
     let(:double_operation_klass) do
       Class.new(Fluxo::Operation) do
-        attributes :num
-
         def call!(**)
           Failure(:result) { "invalid number" }
         end
@@ -51,7 +46,6 @@ RSpec.describe "operation execution with a flow with external operation result" 
 
     let(:main_operation_klass) do
       Class.new(Fluxo::Operation) do
-        attributes :num, :external
         flow :double, :plus_one
 
         private
@@ -78,17 +72,14 @@ RSpec.describe "operation execution with a flow with external operation result" 
   describe ".on_error" do
     let(:double_operation_klass) do
       Class.new(Fluxo::Operation) do
-        attributes :num
-
         def call!(**)
-          raise ArgumentError
+          raise RuntimeError, "invalid number"
         end
       end
     end
 
     let(:main_operation_klass) do
       Class.new(Fluxo::Operation) do
-        attributes :num, :external
         flow :double, :plus_one
 
         private
@@ -104,9 +95,14 @@ RSpec.describe "operation execution with a flow with external operation result" 
     end
 
     it "coerces the value of sub operation to the main operation" do
+      expect {
+        main_operation_klass.call(num: 2, external: double_operation_klass)
+      }.to raise_error(RuntimeError)
+
+      double_operation_klass.strict = false
       result = main_operation_klass.call(num: 2, external: double_operation_klass)
       expect(result).to be_error
-      expect(result.value).to be_an_instance_of(ArgumentError)
+      expect(result.value).to be_an_instance_of(RuntimeError)
       expect(result.operation).to be_an_instance_of(main_operation_klass)
       expect(result.ids).to eq([:error])
     end

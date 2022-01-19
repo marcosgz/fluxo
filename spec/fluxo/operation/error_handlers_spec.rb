@@ -25,7 +25,13 @@ RSpec.describe "operation error handlers" do
       end
     end
 
-    specify do
+    it "calls the error handlers by running on strict mode" do
+      operation_class.strict = true
+      expect { operation_class.call }.to raise_error(StandardError)
+    end
+
+    it "calls the error handlers by running on non-strict mode" do
+      operation_class.strict = false
       expect(operation_class.call).to be_error
     end
   end

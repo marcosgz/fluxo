@@ -36,23 +36,10 @@ result.success? # => true
 result.value # => :ok
 ```
 
-In order to execute an operation with parameters, you must first define list of attributes:
+In order to execute an operation with parameters, you just need to pass them to the call method:
 
 ```ruby
 class MyOperation < Fluxo::Operation
-  attributes :param1, :param2
-
-  def call!(param1:, param2:)
-    Success(:ok)
-  end
-end
-```
-
-or use the shortcut for defining attributes:
-```ruby
-class MyOperation < Fluxo::Operation
-  attributes :param1, :param2
-
   def call!(param1:, param2:)
     Success(:ok)
   end
@@ -70,7 +57,7 @@ Use the `Success` and `Failure` methods to create results accordingly.
 
 ```ruby
 class AgeCheckOperation < Fluxo::Operation
-  attributes :age
+  self.strict = false # By default, operations are strict. You must it to catch errors and use on_error hook.
 
   def call!(age:)
     age >= 18 ? Success('ok') : Failure('too young')
@@ -102,8 +89,6 @@ You can also define multiple callbacks for the opportunity result. The callbacks
 
 ```ruby
 class AgeCategoriesOperation < Fluxo::Operation
-  attributes :age
-
   def call!(age:)
     case age
     when 0..14
@@ -135,7 +120,6 @@ Once things become more complex, you can use can define a `flow` with a list of 
 
 ```ruby
 class ArithmeticOperation < Fluxo::Operation
-  attributes :num
   flow :normalize, :plus_one, :double, :square, :wrap
 
   def normalize(num:)
@@ -166,14 +150,10 @@ ArithmeticOperation.call(num: 1) \
 # Result: 16
 ```
 
-Notice that the value of each step is passed to the next step as an argument. And the last step is always the result of the operation.
-
-By default you can only pass defined attributes to the steps. You may want to pass transient attributes to the steps. You can do this by specifying a `transient_attributes` option to the operation class:
+Notice that the value of each step is passed to the next step as an argument. You can include more transient attributes during the flow execution. Step result with object different of a Hash will be ignored. And the last step is always the result of the operation.
 
 ```ruby
 class CreateUserOperation < Fluxo::Operation
-  attributes :name, :age
-
   flow :build, :save
 
   def build(name:, age:)
@@ -189,35 +169,12 @@ class CreateUserOperation < Fluxo::Operation
 end
 ```
 
-This is useful to make the flow data transparent to the operation. But you can also disable this by setting the `strict_transient_attributes` option to `false` under the Operation class or the global configuration.
-
-```ruby
-class CreateUserOperation < Fluxo::Operation
-  attributes :name, :age
-  self.strict_transient_attributes = false
-  # ...
-end
-# or globally
-Fluxo.config do |config|
-  config.strict_attributes = false
-  config.strict_transient_attributes = false
-end
-# or even
-Fluxo.config.strict_transient_attributes = false
-```
-
 ### Operation Groups
 
 Another very useful feature of Fluxo is the ability to group operations steps. Imagine that you want to execute a bunch of operations in a single transaction. You can do this by defining a the group method and specifying the steps to be executed in the group.
 
 ```ruby
-class CreateUserOperation < Fluxo::Operation
-  attributes :name, :email
-
-  transient_attributes :user, :profile
-
-  flow :build, {transaction: %i[save_user save_profile]}, :enqueue_job
-
+class ApplicationOperation < Fluxo::Operation
   private
 
   def transaction(**kwargs, &block)
@@ -227,6 +184,10 @@ class CreateUserOperation < Fluxo::Operation
     end
     result
   end
+end
+
+class CreateUserOperation < ApplicationOperation
+  flow :build, {transaction: %i[save_user save_profile]}, :enqueue_job
 
   def build(name:, email:)
     user = User.new(name: name, email: email)
@@ -258,8 +219,6 @@ If you have the `ActiveModel` gem installed, you can use the `validations` metho
 
 ```ruby
 class SubscribeOperation < Fluxo::Operation
-  attributes :name, :email
-
   validations do
     validates :name, presence: true
     validates :email, presence: true, format: { with: /\A[^@]+@[^@]+\z/ }
@@ -277,24 +236,18 @@ To promote single responsibility principle, Fluxo allows compose a complex opera
 
 ```ruby
 class DoubleOperation < Fluxo::Operation
-  attributes :num
-
   def call!(num:)
     Success(num: num * 2)
   end
 end
 
 class SquareOperation < Fluxo::Operation
-  attributes :num
-
   def call!(num:)
     Success(num: num * 2)
   end
 end
 
 class ArithmeticOperation < Fluxo::Operation
-  attributes :num
-
   flow :normalize, :double, :square
 
   def normalize(num:)
@@ -314,11 +267,10 @@ end
 ### Configuration
 
 ```ruby
-Fluxo.config do |config|
+Fluxo.configure do |config|
   config.wrap_falsey_result = false
   config.wrap_truthy_result = false
-  config.strict_attributes = true
-  config.strict_transient_attributes = true
+  config.strict = true
   config.error_handlers << ->(result) { Honeybadger.notify(result.value) }
 end
 ```

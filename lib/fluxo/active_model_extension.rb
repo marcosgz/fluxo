@@ -1,3 +1,4 @@
+require 'ostruct'
 
 module Fluxo
   module ActiveModelExtension
@@ -20,7 +21,7 @@ module Fluxo
       private
 
       def build_validations_proxy!
-        validator = Class.new do
+        validator = Class.new(OpenStruct) do
           include ActiveModel::Validations
 
           def self.validate!(operation_instance, **attrs)
@@ -44,8 +45,6 @@ module Fluxo
         end
 
         validator.class_eval <<-RUBY, __FILE__, __LINE__ + 1
-          attr_accessor #{attribute_names.map(&:inspect).join(", ")}
-
           def self.name
             "#{name || 'Fluxo::Operation'}::Validations"
           end

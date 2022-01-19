@@ -5,8 +5,6 @@ RSpec.describe "operation execution with a flow" do
     context "when operation only mutate attributes" do
       let(:operation_klass) do
         Class.new(Fluxo::Operation) do
-          attributes :num
-
           flow :add1, :add2
 
           private
@@ -41,8 +39,6 @@ RSpec.describe "operation execution with a flow" do
     context "when operation wraps the value of last step to a non-hash object" do
       let(:operation_klass) do
         Class.new(Fluxo::Operation) do
-          attributes :num
-
           flow :parse, :double_and_wrap
 
           private
@@ -67,10 +63,7 @@ RSpec.describe "operation execution with a flow" do
     context "when operation uses transient attributes" do
       let(:operation_klass) do
         Class.new(Fluxo::Operation) do
-          attributes :num
-
           flow :add1, :wrap
-          transient_attributes :total
 
           private
 
@@ -84,7 +77,7 @@ RSpec.describe "operation execution with a flow" do
         end
       end
 
-      it "passes transient attributes to the flow steps" do
+      it "merges the transient attributes during the workflow execution" do
         count = 0
         expected_value = nil
         result = operation_klass
@@ -99,26 +92,6 @@ RSpec.describe "operation execution with a flow" do
         expect(count).to eq(11)
         expect(expected_value).to eq(total: 1)
       end
-
-      it "raises an error when step does not have defined transient attributes running on strict mode" do
-        opp_class = Class.new(Fluxo::Operation) do
-          attributes :num
-
-          flow :add1, :wrap
-
-          def add1(num:, **)
-            Success(:one) { {total: num + 1} }
-          end
-
-          def wrap(total:, num:, **)
-            Success(total: total * num)
-          end
-        end
-        expect { opp_class.call(num: 2) }.to raise_error(Fluxo::NotDefinedAttributeError)
-        opp_class.strict_transient_attributes = false
-        expect(result = opp_class.call(num: 2)).to be_success
-        expect(result.value).to eq(total: 6)
-      end
     end
   end
 
@@ -126,8 +99,6 @@ RSpec.describe "operation execution with a flow" do
     context "when operation only mutates attributes" do
       let(:operation_klass) do
         Class.new(Fluxo::Operation) do
-          attributes :num
-
           flow :add1, :add2, :add3
 
           private
@@ -163,10 +134,8 @@ RSpec.describe "operation execution with a flow" do
     end
 
     context "when operation uses transient attributes" do
-      it "raises an error when step does not have defined transient attributes running on strict mode" do
+      it "merges the transient attributes during the workflow execution" do
         opp_class = Class.new(Fluxo::Operation) do
-          attributes :num
-
           flow :add1, :wrap
 
           def add1(num:, **)
@@ -177,8 +146,6 @@ RSpec.describe "operation execution with a flow" do
             Failure(total: total)
           end
         end
-        expect { opp_class.call(num: 0) }.to raise_error(Fluxo::NotDefinedAttributeError)
-        opp_class.strict_transient_attributes = false
         expect(result = opp_class.call(num: 0)).to be_failure
         expect(result.value).to eq(total: 1)
       end
@@ -189,8 +156,6 @@ RSpec.describe "operation execution with a flow" do
     context "when operation only mutates attributes" do
       let(:operation_klass) do
         Class.new(Fluxo::Operation) do
-          attributes :num
-
           flow :add1, :add2, :add3
 
           private
@@ -200,7 +165,7 @@ RSpec.describe "operation execution with a flow" do
           end
 
           def add2(num:, **)
-            raise NoMethodError
+            raise RuntimeError
           end
 
           def add3(num:, **)
@@ -210,6 +175,9 @@ RSpec.describe "operation execution with a flow" do
       end
 
       it "calls the global on_error only once with a result of all flow steps" do
+        expect { operation_klass.call(num: 0) }.to raise_error(RuntimeError)
+
+        operation_klass.strict = false
         count = 0
         expected_value = nil
         expected_result = operation_klass
@@ -219,16 +187,14 @@ RSpec.describe "operation execution with a flow" do
           .on_error(:something) { count += 10 }
           .on_success { raise "on success should not be called" }
         expect(count).to eq(1)
-        expect(expected_value).to be_an_instance_of(NoMethodError)
-        expect(expected_result.value).to be_an_instance_of(NoMethodError)
+        expect(expected_value).to be_an_instance_of(RuntimeError)
+        expect(expected_result.value).to be_an_instance_of(RuntimeError)
       end
     end
 
     context "when operation uses transient attributes" do
-      it "raises an error when step does not have defined transient attributes running on strict mode" do
+      it "merges the transient attributes during the workflow execution" do
         opp_class = Class.new(Fluxo::Operation) do
-          attributes :num
-
           flow :add1, :wrap
 
           def add1(num:, **)
@@ -236,13 +202,15 @@ RSpec.describe "operation execution with a flow" do
           end
 
           def wrap(total:, **)
-            raise NoMethodError
+            raise RuntimeError
           end
         end
-        expect { opp_class.call(num: 0) }.to raise_error(Fluxo::NotDefinedAttributeError)
-        opp_class.strict_transient_attributes = false
+
+        expect { opp_class.call(num: 0) }.to raise_error(RuntimeError)
+
+        opp_class.strict = false
         expect(result = opp_class.call(num: 0)).to be_error
-        expect(result.value).to be_an_instance_of(NoMethodError)
+        expect(result.value).to be_an_instance_of(RuntimeError)
       end
     end
   end

@@ -18,12 +18,12 @@ module Fluxo
 
         begin
           instance.__execute_flow__(steps: [:call!], attributes: attrs)
-        rescue InvalidResultError, AttributeError, ValidationDefinitionError => e
+        rescue ArgumentError, Fluxo::Error => e
           raise e
         rescue => e
-          Fluxo::Result.new(type: :exception, value: e, operation: instance, ids: %i[error]).tap do |result|
-            Fluxo.config.error_handlers.each { |handler| handler.call(result) }
-          end
+          result = Fluxo::Result.new(type: :exception, value: e, operation: instance, ids: %i[error])
+          Fluxo.config.error_handlers.each { |handler| handler.call(result) }
+          strict? ? raise(e) : result
         end
       end
     end
@@ -39,7 +39,6 @@ module Fluxo
     # If one of the methods is a failure stop the execution and return a result.
     def __execute_flow__(steps: [], attributes: {}, validate: true)
       transient_attributes, transient_ids = attributes.dup, Hash.new { |h, k| h[k] = [] }
-      __validate_attributes__(first_step: steps.first, attributes: transient_attributes) if validate
 
       result = nil
       steps.unshift(:__validate__) if self.class.validations_proxy && validate # add validate step before the first step
@@ -99,30 +98,6 @@ module Fluxo
 
     private
 
-    # Validates the operation was called with all the required keyword arguments.
-    # @param first_step [Symbol, Hash] The first step method
-    # @param attributes [Hash] The attributes to validate
-    # @return [void]
-    # @raise [MissingAttributeError] When a required attribute is missing
-    def __validate_attributes__(attributes:, first_step:)
-      if self.class.strict_attributes? && (extra = attributes.keys - self.class.attribute_names).any?
-        raise NotDefinedAttributeError, <<~ERROR
-          The following attributes are not defined: #{extra.join(", ")}
-
-          You can use the #{self.class.name}.attributes method to specify list of allowed attributes.
-          Or you can disable strict attributes mode by setting the strict_attributes to true.
-
-          Source:
-          #{__method_source__(first_step)}
-        ERROR
-      end
-
-      step_method = __expand_step_method__(first_step)
-      method(step_method).parameters.select { |type, _| type == :keyreq }.each do |(_type, name)|
-        raise(MissingAttributeError, "Missing :#{name} attribute on #{self.class.name}#{step_method} step method.") unless attributes.key?(name)
-      end
-    end
-
     # Merge the result attributes with the new attributes. Also checks if the upcomming step
     # has the required attributes and transient attributes to a valid execution.
     # @param new_attributes [Hash] The new attributes
@@ -131,47 +106,9 @@ module Fluxo
     def __merge_result_attributes__(new_attributes:, old_attributes:, next_step:)
       return old_attributes unless new_attributes.is_a?(Hash)
 
-      attributes = old_attributes.merge(new_attributes)
-      allowed_attrs = self.class.attribute_names + self.class.transient_attribute_names
-      if self.class.strict_transient_attributes? &&
-          (extra = attributes.keys - allowed_attrs).any?
-        raise NotDefinedAttributeError, <<~ERROR
-          The following transient attributes are not defined: #{extra.join(", ")}
-
-          You can use the #{self.class.name}.transient_attributes method to specify list of allowed attributes.
-          Or you can disable strict transient attributes mode by setting the strict_transient_attributes to true.
-
-          Source:
-          #{__method_source__(next_step)}
-        ERROR
-      end
-
-      step_method = __expand_step_method__(next_step)
-      method(step_method).parameters.select { |type, _| type == :keyreq }.each do |(_type, name)|
-        raise(MissingAttributeError, "Missing :#{name} transient attribute on #{self.class.name}##{step_method} step method.") unless attributes.key?(name)
-      end
-
-      attributes
+      old_attributes.merge(new_attributes.select { |k, _| k.is_a?(Symbol) })
     end
 
-    def __method_source__(step)
-      method_name = __expand_step_method__(step)
-      format("* %<method_name>s: %<source>s",
-        method_name: method_name,
-        source: method(method_name).source_location.join(":"),
-      )
-    end
-
-    # Return the step method as an array. When it's a hash it suppose to be a
-    # be a step group. In this case return its first key and its first value as
-    # the array of step methods.
-    #
-    # @param step [Symbol, Hash] The step method name
-    def __expand_step_method__(step)
-      return step unless step.is_a?(Hash)
-
-      step.keys.first
-    end
 
     # Execute active_model validation as a flow step.
     # @param attributes [Hash] The attributes to validate
