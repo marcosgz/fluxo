@@ -20,9 +20,9 @@ RSpec.describe "operation with required attributes" do
       expect(result.value).to eq(error: "Missing required attributes: user")
     end
 
-    it "validate presence of :require_attributes" do
+    it "validate presence of :validate_attributes" do
       operation = Class.new(Fluxo::Operation) do
-        require_attributes :user
+        validate_attributes :user
         def call!(**)
           Success(:ok)
         end
@@ -65,9 +65,9 @@ RSpec.describe "operation with required attributes" do
       expect(result.value).to eq(error: "Missing required attributes: user")
     end
 
-    it "validate presence of :require_attributes" do
+    it "validate presence of :validate_attributes" do
       operation = Class.new(Fluxo::Operation) do
-        require_attributes :user
+        validate_attributes :user
 
         flow :a, :b
 
