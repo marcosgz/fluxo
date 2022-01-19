@@ -3,7 +3,9 @@ require "spec_helper"
 RSpec.describe "operation execution with a grouped flow steps" do
   describe ".on_success" do
     let(:operation_klass) do
-      Class.new(Fluxo::Operation(:num)) do
+      Class.new(Fluxo::Operation) do
+        attributes :num
+
         flow :add1, {inner_add: %i[add2 add3]}, :add4
 
         private
@@ -36,7 +38,9 @@ RSpec.describe "operation execution with a grouped flow steps" do
 
   describe ".on_success" do
     let(:operation_klass) do
-      Class.new(Fluxo::Operation(:num)) do
+      Class.new(Fluxo::Operation) do
+        attributes :num
+
         flow :add1, {inner_add: %i[add2 add3]}, :add4
 
         private
@@ -70,7 +74,9 @@ RSpec.describe "operation execution with a grouped flow steps" do
 
   describe ".on_error" do
     let(:operation_klass) do
-      Class.new(Fluxo::Operation(:num)) do
+      Class.new(Fluxo::Operation) do
+        attributes :num
+
         flow :add1, {inner_add: %i[add2 add3]}, :add4
 
         private
@@ -103,7 +109,9 @@ RSpec.describe "operation execution with a grouped flow steps" do
 
   describe "method attributes validation" do
     let(:operation_klass) do
-      Class.new(Fluxo::Operation(:foo)) do
+      Class.new(Fluxo::Operation) do
+        attributes :foo
+
         transient_attributes :bar
         flow :step1, {group: %i[step2 step3]}, :step4
 

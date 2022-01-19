@@ -11,22 +11,6 @@ RSpec.describe Fluxo::Operation do
     expect(klass.attribute_names).to eq([])
   end
 
-  describe ".Opearation" do
-    it "define attributes an return operation superclass" do
-      klass = Fluxo::Operation(:foo, :bar)
-      expect(klass.superclass).to eq(Fluxo::Operation)
-      expect(klass.attribute_names).to eq([:foo, :bar])
-      expect(klass.instance_methods).not_to include(:foo, :bar)
-    end
-
-    it "inherits from Fluxo::Operation using input attributes and block" do
-      klass = Class.new(Fluxo::Operation(:foo, :bar))
-      expect(klass.superclass.superclass).to eq(Fluxo::Operation)
-      expect(klass.attribute_names).to eq([:foo, :bar])
-      expect(klass.instance_methods).not_to include(:foo, :bar)
-    end
-  end
-
   describe ".attributes" do
     it "sets the attributes" do
       klass = Class.new(Fluxo::Operation)
@@ -101,7 +85,9 @@ RSpec.describe Fluxo::Operation do
 
     context "when the operation have attributes" do
       let(:operation) do
-        Class.new(Fluxo::Operation(:foo, :bar)) do
+        Class.new(Fluxo::Operation) do
+          attributes :foo, :bar
+
           def call!(foo:, bar:, **)
             Success(foo: "foo", bar: "bar")
           end
@@ -138,8 +124,9 @@ RSpec.describe Fluxo::Operation do
 
     context "when the operation have transient flow attributes" do
       let(:operation) do
-        Class.new(Fluxo::Operation(:foo)) do
-          attributes :bar
+        Class.new(Fluxo::Operation) do
+          attributes :bar, :foo
+
           transient_attributes :baz
 
           flow :foo, :bar, :baz, :wrap

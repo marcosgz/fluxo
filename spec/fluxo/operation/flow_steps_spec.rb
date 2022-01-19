@@ -4,7 +4,9 @@ RSpec.describe "operation execution with a flow" do
   describe ".on_success" do
     context "when operation only mutate attributes" do
       let(:operation_klass) do
-        Class.new(Fluxo::Operation(:num)) do
+        Class.new(Fluxo::Operation) do
+          attributes :num
+
           flow :add1, :add2
 
           private
@@ -38,7 +40,9 @@ RSpec.describe "operation execution with a flow" do
 
     context "when operation wraps the value of last step to a non-hash object" do
       let(:operation_klass) do
-        Class.new(Fluxo::Operation(:num)) do
+        Class.new(Fluxo::Operation) do
+          attributes :num
+
           flow :parse, :double_and_wrap
 
           private
@@ -62,7 +66,9 @@ RSpec.describe "operation execution with a flow" do
 
     context "when operation uses transient attributes" do
       let(:operation_klass) do
-        Class.new(Fluxo::Operation(:num)) do
+        Class.new(Fluxo::Operation) do
+          attributes :num
+
           flow :add1, :wrap
           transient_attributes :total
 
@@ -95,7 +101,9 @@ RSpec.describe "operation execution with a flow" do
       end
 
       it "raises an error when step does not have defined transient attributes running on strict mode" do
-        opp_class = Class.new(Fluxo::Operation(:num)) do
+        opp_class = Class.new(Fluxo::Operation) do
+          attributes :num
+
           flow :add1, :wrap
 
           def add1(num:, **)
@@ -117,7 +125,9 @@ RSpec.describe "operation execution with a flow" do
   describe ".on_failure" do
     context "when operation only mutates attributes" do
       let(:operation_klass) do
-        Class.new(Fluxo::Operation(:num)) do
+        Class.new(Fluxo::Operation) do
+          attributes :num
+
           flow :add1, :add2, :add3
 
           private
@@ -154,7 +164,9 @@ RSpec.describe "operation execution with a flow" do
 
     context "when operation uses transient attributes" do
       it "raises an error when step does not have defined transient attributes running on strict mode" do
-        opp_class = Class.new(Fluxo::Operation(:num)) do
+        opp_class = Class.new(Fluxo::Operation) do
+          attributes :num
+
           flow :add1, :wrap
 
           def add1(num:, **)
@@ -176,7 +188,9 @@ RSpec.describe "operation execution with a flow" do
   describe ".on_error" do
     context "when operation only mutates attributes" do
       let(:operation_klass) do
-        Class.new(Fluxo::Operation(:num)) do
+        Class.new(Fluxo::Operation) do
+          attributes :num
+
           flow :add1, :add2, :add3
 
           private
@@ -212,7 +226,9 @@ RSpec.describe "operation execution with a flow" do
 
     context "when operation uses transient attributes" do
       it "raises an error when step does not have defined transient attributes running on strict mode" do
-        opp_class = Class.new(Fluxo::Operation(:num)) do
+        opp_class = Class.new(Fluxo::Operation) do
+          attributes :num
+
           flow :add1, :wrap
 
           def add1(num:, **)

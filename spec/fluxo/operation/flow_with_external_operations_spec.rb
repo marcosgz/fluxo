@@ -3,7 +3,9 @@ require "spec_helper"
 RSpec.describe "operation execution with a flow with external operation result" do
   describe ".on_success" do
     let(:double_operation_klass) do
-      Class.new(Fluxo::Operation(:num)) do
+      Class.new(Fluxo::Operation) do
+        attributes :num
+
         def call!(num:)
           Success(:result) { {num: num * 2} }
         end
@@ -11,7 +13,8 @@ RSpec.describe "operation execution with a flow with external operation result" 
     end
 
     let(:main_operation_klass) do
-      Class.new(Fluxo::Operation(:num, :external)) do
+      Class.new(Fluxo::Operation) do
+        attributes :num, :external
         flow :plus_one, :double
 
         private
@@ -37,7 +40,9 @@ RSpec.describe "operation execution with a flow with external operation result" 
 
   describe ".on_failure" do
     let(:double_operation_klass) do
-      Class.new(Fluxo::Operation(:num)) do
+      Class.new(Fluxo::Operation) do
+        attributes :num
+
         def call!(**)
           Failure(:result) { "invalid number" }
         end
@@ -45,7 +50,8 @@ RSpec.describe "operation execution with a flow with external operation result" 
     end
 
     let(:main_operation_klass) do
-      Class.new(Fluxo::Operation(:num, :external)) do
+      Class.new(Fluxo::Operation) do
+        attributes :num, :external
         flow :double, :plus_one
 
         private
@@ -71,7 +77,9 @@ RSpec.describe "operation execution with a flow with external operation result" 
 
   describe ".on_error" do
     let(:double_operation_klass) do
-      Class.new(Fluxo::Operation(:num)) do
+      Class.new(Fluxo::Operation) do
+        attributes :num
+
         def call!(**)
           raise ArgumentError
         end
@@ -79,7 +87,8 @@ RSpec.describe "operation execution with a flow with external operation result" 
     end
 
     let(:main_operation_klass) do
-      Class.new(Fluxo::Operation(:num, :external)) do
+      Class.new(Fluxo::Operation) do
+        attributes :num, :external
         flow :double, :plus_one
 
         private

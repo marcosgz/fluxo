@@ -30,7 +30,7 @@ end
 ```
 
 And then just use the opperation by calling:
-```
+```ruby
 result = MyOperation.call
 result.success? # => true
 result.value # => :ok
@@ -50,7 +50,9 @@ end
 
 or use the shortcut for defining attributes:
 ```ruby
-class MyOperation < Fluxo::Operation(:param1, :param2)
+class MyOperation < Fluxo::Operation
+  attributes :param1, :param2
+
   def call!(param1:, param2:)
     Success(:ok)
   end
@@ -67,7 +69,9 @@ The execution result of an operation is a `Fluxo::Result` object. There are thre
 Use the `Success` and `Failure` methods to create results accordingly.
 
 ```ruby
-class AgeCheckOperation < Fluxo::Operation(:age)
+class AgeCheckOperation < Fluxo::Operation
+  attributes :age
+
   def call!(age:)
     age >= 18 ? Success('ok') : Failure('too young')
   end
@@ -97,7 +101,9 @@ AgeCheckOperation.call(age: 18)
 You can also define multiple callbacks for the opportunity result. The callbacks are executed in the order they were defined. You can filter which callbacks are executed by specifying an identifier to the `Success(id) { }` or `Failure(id) { }` methods along with its value as a block.
 
 ```ruby
-class AgeCategoriesOperation < Fluxo::Operation(:age)
+class AgeCategoriesOperation < Fluxo::Operation
+  attributes :age
+
   def call!(age:)
     case age
     when 0..14
@@ -128,7 +134,8 @@ AgeCategoriesOperation.call(age: 18) \
 Once things become more complex, you can use can define a `flow` with a list of steps to be executed:
 
 ```ruby
-class ArithmeticOperation < Fluxo::Operation(:num)
+class ArithmeticOperation < Fluxo::Operation
+  attributes :num
   flow :normalize, :plus_one, :double, :square, :wrap
 
   def normalize(num:)
@@ -164,7 +171,9 @@ Notice that the value of each step is passed to the next step as an argument. An
 By default you can only pass defined attributes to the steps. You may want to pass transient attributes to the steps. You can do this by specifying a `transient_attributes` option to the operation class:
 
 ```ruby
-class CreateUserOperation < Fluxo::Operation(:name, :age)
+class CreateUserOperation < Fluxo::Operation
+  attributes :name, :age
+
   flow :build, :save
 
   def build(name:, age:)
@@ -183,7 +192,8 @@ end
 This is useful to make the flow data transparent to the operation. But you can also disable this by setting the `strict_transient_attributes` option to `false` under the Operation class or the global configuration.
 
 ```ruby
-class CreateUserOperation < Fluxo::Operation(:name, :age)
+class CreateUserOperation < Fluxo::Operation
+  attributes :name, :age
   self.strict_transient_attributes = false
   # ...
 end
@@ -201,7 +211,9 @@ Fluxo.config.strict_transient_attributes = false
 Another very useful feature of Fluxo is the ability to group operations steps. Imagine that you want to execute a bunch of operations in a single transaction. You can do this by defining a the group method and specifying the steps to be executed in the group.
 
 ```ruby
-class CreateUserOperation < Fluxo::Operation(:name, :email)
+class CreateUserOperation < Fluxo::Operation
+  attributes :name, :email
+
   transient_attributes :user, :profile
 
   flow :build, {transaction: %i[save_user save_profile]}, :enqueue_job
@@ -245,7 +257,9 @@ end
 If you have the `ActiveModel` gem installed, you can use the `validations` method to define validations on the operation.
 
 ```ruby
-class SubscribeOperation < Fluxo::Operation(:name, :email)
+class SubscribeOperation < Fluxo::Operation
+  attributes :name, :email
+
   validations do
     validates :name, presence: true
     validates :email, presence: true, format: { with: /\A[^@]+@[^@]+\z/ }
@@ -262,19 +276,25 @@ end
 To promote single responsibility principle, Fluxo allows compose a complex operation flow by combining other operations.
 
 ```ruby
-class DoubleOperation < Fluxo::Operation(:num)
+class DoubleOperation < Fluxo::Operation
+  attributes :num
+
   def call!(num:)
     Success(num: num * 2)
   end
 end
 
-class SquareOperation < Fluxo::Operation(:num)
+class SquareOperation < Fluxo::Operation
+  attributes :num
+
   def call!(num:)
     Success(num: num * 2)
   end
 end
 
-class ArithmeticOperation < Fluxo::Operation(:num)
+class ArithmeticOperation < Fluxo::Operation
+  attributes :num
+
   flow :normalize, :double, :square
 
   def normalize(num:)

@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "operation/constructor"
 require_relative "operation/attributes"
 
 module Fluxo
@@ -8,9 +7,6 @@ module Fluxo
   # conflict with the Operation step methods that are going to inherit this class.
   class Operation
     include Attributes
-    include Constructor
-
-    def_Operation(::Fluxo)
 
     class << self
       def flow(*methods)
