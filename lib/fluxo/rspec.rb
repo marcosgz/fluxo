@@ -1,4 +1,4 @@
-require 'rspec/expectations'
+require "rspec/expectations"
 
 module Fluxo
   module Rspec
@@ -24,7 +24,7 @@ module Fluxo
         def differ
           RSpec::Support::Differ.new(
             object_preparer: ->(object) { RSpec::Matchers::Composable.surface_descriptions_in(object) },
-            color: RSpec::Matchers.configuration.color?,
+            color: RSpec::Matchers.configuration.color?
           )
         end
 
@@ -32,16 +32,16 @@ module Fluxo
           return "expected that operation succeed, but got invalid result #{actual.inspect}" unless actual.is_a?(Fluxo::Result)
 
           msg = "expected that operation succeed, "
-          if actual.error?
-            msg += format("but the operation errored.\nException:\n %<e>p\n%<t>s", e: actual.value, t: actual.value.backtrace[0..5].join("\n"))
+          msg += if actual.error?
+            format("but the operation errored.\nException:\n %<e>p\n%<t>s", e: actual.value, t: actual.value.backtrace[0..5].join("\n"))
           elsif actual.failure?
-            msg += "but the operation failed."
+            "but the operation failed."
           else
-            msg += "but got success with incorrect value"
+            "but got success with incorrect value"
           end
           if defined?(ActiveModel) && actual.value.is_a?(ActiveModel::Errors) && actual.value.any?
             msg += "\nActive Model errors:\n"
-            msg += actual.value.full_messages.each { |m| msg += "--> #{m}" }
+            actual.value.full_messages.each { |m| msg += "--> #{m}" }
           end
           msg += "\nDiff:" + differ.diff_as_string(actual.value, @expected_value) if @expected_value
           msg
@@ -68,7 +68,7 @@ module Fluxo
         def differ
           RSpec::Support::Differ.new(
             object_preparer: ->(object) { RSpec::Matchers::Composable.surface_descriptions_in(object) },
-            color: RSpec::Matchers.configuration.color?,
+            color: RSpec::Matchers.configuration.color?
           )
         end
 
@@ -87,7 +87,7 @@ module Fluxo
           end
           if defined?(ActiveModel) && actual.value.is_a?(ActiveModel::Errors) && actual.value.any?
             msg += "\nActive Model errors:\n"
-            msg += actual.value.full_messages.each { |m| msg += "--> #{m}" }
+            actual.value.full_messages.each { |m| msg += "--> #{m}" }
           end
           msg
         end
@@ -114,16 +114,16 @@ module Fluxo
           return "expected that operation error, but got invalid result #{actual.inspect}" unless actual.is_a?(Fluxo::Result)
 
           msg = "expected that operation error, "
-          if actual.success?
-            msg += "but the operation succeeded"
+          msg += if actual.success?
+            "but the operation succeeded"
           elsif actual.failure?
-            msg += "but the operation failed"
+            "but the operation failed"
           else
-            msg += "but got error with #{@expected_value&.inspect || "incorrect"} instead of #{actual.value.inspect}"
+            "but got error with #{@expected_value&.inspect || "incorrect"} instead of #{actual.value.inspect}"
           end
           if defined?(ActiveModel) && actual.value.is_a?(ActiveModel::Errors) && actual.value.any?
             msg += "\nActive Model errors:\n"
-            msg += actual.value.full_messages.each { |m| msg += "--> #{m}" }
+            actual.value.full_messages.each { |m| msg += "--> #{m}" }
           end
           msg
         end
