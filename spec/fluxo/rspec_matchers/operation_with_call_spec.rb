@@ -125,12 +125,17 @@ RSpec.describe DummySingleCallOperation, type: :operation do
       end
 
       specify do
+        expect(described_class.call(success: {val: "ok"})).to result_succeed.with_value(val: "other")
+      end
+
+      specify do
         expect(described_class.call(failure: "fail")).to result_succeed
       end
 
       specify do
         expect(described_class.call(failure: "fail")).to result_succeed.with_value("ok")
       end
+
 
       specify do
         described_class.strict = false
@@ -159,6 +164,10 @@ RSpec.describe DummySingleCallOperation, type: :operation do
 
       specify do
         expect(described_class.call(failure: "fail")).to result_fail.with_value("other")
+      end
+
+      specify do
+        expect(described_class.call(failure: {val: "fail"})).to result_fail.with_value(val: "other")
       end
 
       specify do

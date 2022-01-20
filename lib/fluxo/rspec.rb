@@ -43,7 +43,7 @@ module Fluxo
             msg += "\nActive Model errors:\n"
             actual.value.full_messages.each { |m| msg += "--> #{m}" }
           end
-          msg += "\nDiff:" + differ.diff_as_string(actual.value, @expected_value) if @expected_value
+          msg += "\nDiff:" + differ.diff(actual.value, @expected_value) if @expected_value
           msg
         end
 
@@ -78,12 +78,12 @@ module Fluxo
           msg = "expected that operation fail, "
           if actual.success?
             msg += "but the operation succeeded."
-            msg += "\nDiff:" + differ.diff_as_string(actual.value, @expected_value) if @expected_value
+            msg += "\nDiff:" + differ.diff(actual.value, @expected_value) if @expected_value
           elsif actual.error?
             msg += format("but the operation errored.\nException:\n %<e>p\n%<t>s", e: actual.value, t: actual.value.backtrace[0..5].join("\n"))
           else
             msg += "but got failure with incorrect value"
-            msg += "\nDiff:" + differ.diff_as_string(actual.value, @expected_value) if @expected_value
+            msg += "\nDiff:" + differ.diff(actual.value, @expected_value) if @expected_value
           end
           if defined?(ActiveModel) && actual.value.is_a?(ActiveModel::Errors) && actual.value.any?
             msg += "\nActive Model errors:\n"
