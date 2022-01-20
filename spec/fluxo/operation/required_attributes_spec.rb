@@ -10,7 +10,7 @@ RSpec.describe "operation with required attributes" do
         end
       end
       expect { operation.call() }.to raise_error(ArgumentError)
-      expect { operation.call(account: nil) }.to raise_error
+      expect { operation.call(account: nil) }.to raise_error(ArgumentError)
 
       operation.strict = false
       expect(result = operation.call()).to be_failure
@@ -28,7 +28,7 @@ RSpec.describe "operation with required attributes" do
         end
       end
       expect { operation.call() }.to raise_error(ArgumentError)
-      expect { operation.call(account: nil) }.to raise_error
+      expect { operation.call(account: nil) }.to raise_error(ArgumentError)
 
       operation.strict = false
       expect(result = operation.call()).to be_failure
@@ -55,7 +55,7 @@ RSpec.describe "operation with required attributes" do
         end
       end
       expect { operation.call() }.to raise_error(ArgumentError)
-      expect { operation.call(account: nil) }.to raise_error
+      expect { operation.call(account: nil) }.to raise_error(ArgumentError)
 
       operation.strict = false
       expect(result = operation.call()).to be_failure
@@ -80,7 +80,7 @@ RSpec.describe "operation with required attributes" do
         end
       end
       expect { operation.call() }.to raise_error(ArgumentError)
-      expect { operation.call(account: nil) }.to raise_error
+      expect { operation.call(account: nil) }.to raise_error(ArgumentError)
 
       operation.strict = false
       expect(result = operation.call()).to be_failure

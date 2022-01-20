@@ -18,12 +18,11 @@ module Fluxo
 
         begin
           instance.__execute_flow__(steps: [:call!], attributes: attrs)
-        rescue SyntaxError, ArgumentError, NoMethodError, Fluxo::Error => e
-          raise e
         rescue => e
           result = Fluxo::Result.new(type: :exception, value: e, operation: instance, ids: %i[error])
           Fluxo.config.error_handlers.each { |handler| handler.call(result) }
-          strict? ? raise(e) : result
+          Fluxo::Errors.raise_operation_error!(result)
+          result
         end
       end
     end

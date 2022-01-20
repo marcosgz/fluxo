@@ -2,7 +2,7 @@
 
 module Fluxo
   class Result
-    ATTRIBUTES = %i[operation type value transient_attributes ids].freeze
+    ATTRIBUTES = %i[operation type value ids transient_attributes].freeze
     attr_reader(*ATTRIBUTES)
 
     # @param options [Hash]
@@ -15,6 +15,7 @@ module Fluxo
       @value = value
       @type = type
       @ids = Array(ids)
+      @transient_attributes = {}
     end
 
     def mutate(**attrs)

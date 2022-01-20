@@ -151,5 +151,11 @@ RSpec.describe Fluxo::Result do
         )
       )
     end
+
+    it "returns a new model with modified transient_attributes" do
+      expect(model.transient_attributes).to eq({})
+      result = model.mutate(transient_attributes: { foo: :bar })
+      expect(result.transient_attributes).to eq(foo: :bar)
+    end
   end
 end
