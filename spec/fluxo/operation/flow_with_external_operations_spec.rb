@@ -107,4 +107,42 @@ RSpec.describe "operation execution with a flow with external operation result" 
       expect(result.ids).to eq([:error])
     end
   end
+
+  context "when external operation result does not match with the flow data data" do
+    let(:double_operation_klass) do
+      Class.new(Fluxo::Operation) do
+        def call!(number:)
+          Success(number * 2)
+        end
+      end
+    end
+
+    let(:main_operation_klass) do
+      Class.new(Fluxo::Operation) do
+        flow :skip, :double, :skip, :num_plus_double
+
+        private
+
+        def double(num:, external:, **)
+          external
+            .call(number: num)
+            .on_success { |result| return Success(double_result: result.value) }
+        end
+
+        def skip(**)
+          Void()
+        end
+
+        def num_plus_double(num:, double_result:, **)
+          Success(num: num + double_result)
+        end
+      end
+    end
+
+    it "preserves transitent data from previous flow operations" do
+      result = main_operation_klass.call(num: 2, external: double_operation_klass)
+      expect(result).to be_success
+      expect(result.value).to eq(num: 6)
+    end
+  end
 end

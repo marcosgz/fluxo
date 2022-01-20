@@ -42,14 +42,16 @@ module Fluxo
 
       result = nil
       steps.unshift(:__validate_required_attributes__) if self.class.required_attributes.any? && validate
-      steps.unshift(:__validate__) if self.class.validations_proxy && validate # add validate step before the first step
+      steps.unshift(:__validate__) if self.class.validations_proxy && validate
       steps.each_with_index do |step, idx|
         if step.is_a?(Hash)
-          step.each do |group_method, group_steps|
+          group_result = step.each do |group_method, group_steps|
             send(group_method, **transient_attributes) do |group_attrs|
               result = __execute_flow__(validate: false, steps: group_steps, attributes: (group_attrs || transient_attributes))
             end
+            result = group_result if group_result.is_a?(Fluxo::Result)
             break unless result.success?
+            transient_attributes = result.transient_attributes # Update transient attributes with the group result in case of value is not a Hash
           end
         else
           result = __wrap_result__(send(step, **transient_attributes))
@@ -65,6 +67,7 @@ module Fluxo
             next_step: steps[idx + 1]
           )
         end
+        result.mutate(transient_attributes: transient_attributes)
       end
       result.mutate(ids: transient_ids[result.type].uniq, operation: self)
     end

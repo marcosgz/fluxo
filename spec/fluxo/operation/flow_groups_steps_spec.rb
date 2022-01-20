@@ -127,4 +127,31 @@ RSpec.describe "operation execution with a grouped flow steps" do
       expect { operation_klass.call(foo: "ok") }.not_to raise_error
     end
   end
+
+  context "when groups adds transient data to the operation" do
+    let(:operation_klass) do
+      Class.new(Fluxo::Operation) do
+        flow :a, {group: %i[b c]}, :d
+
+        private
+
+        def group(**kwargs, &block)
+          block.call(**kwargs)
+        end
+
+        # rubocop:disable Style/SingleLineMethods,Layout/EmptyLineBetweenDefs
+        def a(a:); Success(b: a.to_s); end
+        def b(a:, b:); Success(c: b.to_s, d: "ok"); end
+        def c(a:, b:, c:, d:); Void(); end
+        def d(d:, **); Success("#{d} from #d"); end
+        # rubocop:enable Style/SingleLineMethods,Layout/EmptyLineBetweenDefs
+      end
+    end
+
+    specify do
+      expected_result = operation_klass.call(a: :a)
+      expect(expected_result).to be_success
+      expect(expected_result.value).to eq("ok from #d")
+    end
+  end
 end

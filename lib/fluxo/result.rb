@@ -2,7 +2,8 @@
 
 module Fluxo
   class Result
-    attr_reader :operation, :type, :value, :ids
+    ATTRIBUTES = %i[operation type value transient_attributes ids].freeze
+    attr_reader(*ATTRIBUTES)
 
     # @param options [Hash]
     # @option options [Fluxo::Operation] :operation The operation instance that gererated this result
@@ -17,7 +18,10 @@ module Fluxo
     end
 
     def mutate(**attrs)
-      self.class.new(**{operation: operation, type: type, value: value, ids: ids}.merge(attrs))
+      attrs.each do |key, value|
+        instance_variable_set("@#{key}", value) if ATTRIBUTES.include?(key)
+      end
+      self
     end
 
     def ==(other)
