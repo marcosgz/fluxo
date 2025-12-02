@@ -40,15 +40,17 @@ module Fluxo
       transient_attributes, transient_ids = attributes.dup, Hash.new { |h, k| h[k] = [] }
 
       result = nil
+      steps = steps.dup
       steps.unshift(:__validate_required_attributes__) if self.class.required_attributes.any? && validate
       steps.unshift(:__validate__) if self.class.validations_proxy && validate
       steps.each_with_index do |step, idx|
         if step.is_a?(Hash)
-          group_result = step.each do |group_method, group_steps|
+          step.each do |group_method, group_steps|
+            recursive_result = nil
             send(group_method, **transient_attributes) do |group_attrs|
-              result = __execute_flow__(validate: false, steps: group_steps, attributes: (group_attrs || transient_attributes))
+              recursive_result = __execute_flow__(validate: false, steps: group_steps, attributes: (group_attrs || transient_attributes))
             end
-            result = group_result if group_result.is_a?(Fluxo::Result)
+            result = recursive_result if recursive_result.is_a?(Fluxo::Result)
             break unless result.success?
             transient_attributes = result.transient_attributes # Update transient attributes with the group result in case of value is not a Hash
           end
