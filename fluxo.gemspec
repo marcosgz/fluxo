@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.description = "Provides a simple and powerful way to create operations service objects for complex workflows."
 
   spec.homepage = "https://github.com/marcosgz/fluxo"
-  spec.license = "MIT"
+  spec.license = "GPL-3.0-or-later"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
 
   spec.metadata["homepage_uri"] = spec.homepage
